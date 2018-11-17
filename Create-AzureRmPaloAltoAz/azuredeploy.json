@@ -28,6 +28,7 @@
       },
       "managed_disk_type": {
         "type": "string",
+        "defaultValue": "StandardSSD_LRS",
         "metadata": {
           "description": "Managed disk type"
         }
