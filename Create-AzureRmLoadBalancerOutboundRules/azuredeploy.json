@@ -1,0 +1,156 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2018-05-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiVersion": {
+            "defaultValue": "2018-08-01",
+            "type": "string",
+            "metadata": {
+                "description": "API version 2018-08-01 permits an outbound rule definition structured : https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview"
+            }
+        },
+        "lbName": {
+            "type": "string",
+            "metadata": {
+                "description": "Load balancer name."
+            }
+        },
+        "tags": {
+            "type": "string",
+            "defaultValue": "{\"APP\":\"XXX\",\"BUD\":\"XXX\",\"CTC\":\"XXX@XXX\",\"ENV\":\"XXX\"}",
+            "metadata": {
+                "description": "Tags of the Vault"
+            }
+        },
+        "sku": {
+            "type": "string",
+            "metadata": {
+                "description": "Load balancer and public IP sku."
+            },
+            "allowedValues": [
+                "Standard"
+            ]
+        },
+        "publicIPAllocationMethod": {
+            "type": "string",
+            "defaultValue": "Static",
+            "metadata": {
+                "description": "The public IP allocation method. Possible values are: 'Static' and 'Dynamic'. - Static or Dynamic."
+            }
+        },
+        "allocatedOutboundPorts": {
+            "type": "string",
+            "metadata": {
+                "description": "Number of SNAT ports, Load Balancer allocates SNAT ports in multiples of 8."
+            }
+        },
+        "idleTimeoutInMinutes": {
+            "type": "string",
+            "metadata": {
+                "description": "Outbound flow idle timeout. The parameter accepts a value from 4 to 66."
+            }
+        },
+        "enableTcpReset": {
+            "type": "string",
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Enable TCP Reset on idle timeout."
+            }
+        },
+        "protocol": {
+            "type": "string",
+            "metadata": {
+                "description": "Transport protocol of the outbound rule."
+            },
+            "allowedValues": [
+                "Tcp",
+                "Udp",
+                "All"
+            ]
+        }
+    },
+    "variables": {
+        "enableTcpReset": "[contains(parameters('enableTcpReset'), 'true')]",
+        "publicIPAddressName": "[concat(parameters('lbName'), '_pip1')]",
+        "outboundRuleName": "[concat(parameters('lbName'), '_outrule1')]",
+        "frontend_ip_configuration_name": "[concat(parameters('lbName'), '_lbcfg1')]",
+        "backendAddressPoolName": "[concat(parameters('lbName'), '_bckpool1')]",
+        "lbID": "[resourceId('Microsoft.Network/loadBalancers',parameters('lbName'))]",
+        "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
+        "outboundRuleID": "[concat(variables('lbID'), '/outboundRules/', variables('outboundRuleName'))]",
+        "frontendIPConfigurationID": "[concat(variables('lbID'), '/frontendIPConfigurations/', variables('frontend_ip_configuration_name'))]",
+        "backendAddressPoolId": "[concat(variables('lbID'),'/backendAddressPools/', variables('backendAddressPoolName'))]",
+        "tagsbase64": "[base64(parameters('tags'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-08-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "sku": {
+                "name": "[parameters('sku')]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('publicIPAllocationMethod')]"
+            }
+        },
+        {
+            "apiVersion": "[parameters('apiVersion')]",
+            "name": "[parameters('lbName')]",
+            "type": "Microsoft.Network/loadBalancers",
+            "location": "[resourceGroup().location]",
+            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "sku": {
+                "name": "[parameters('sku')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+            ],
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "[variables('frontend_ip_configuration_name')]",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[variables('publicIPAddressID')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "[variables('backendAddressPoolName')]"
+                    }
+                ],
+                "outboundRules": [
+                    {
+                        "name": "[variables('outboundRuleName')]",
+                        "id": "[variables('outboundRuleID')]",
+                        "properties": {
+                            "frontendIPConfigurations": [
+                                {
+                                    "id": "[variables('frontendIPConfigurationID')]"
+                                }
+                            ],
+                            "allocatedOutboundPorts": "[int(parameters('allocatedOutboundPorts'))]",
+                            "idleTimeoutInMinutes": "[int(parameters('idleTimeoutInMinutes'))]",
+                            "enableTcpReset": "[variables('enableTcpReset')]",
+                            "protocol": "[parameters('protocol')]",
+                            "backendAddressPool": {
+                                "id": "[variables('backendAddressPoolId')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "load_balancer_backend_address_pools_id": {
+            "type": "string",
+            "value": "[variables('backendAddressPoolId')]"
+        }
+    }
+}
