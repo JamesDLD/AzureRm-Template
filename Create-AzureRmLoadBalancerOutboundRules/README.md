@@ -1,3 +1,5 @@
+[Previous page >](../)
+
 # Create a Standard Public Load Balancer with outbound rules
 
 Create a Standard Public Load Balancer with outbound rules  - <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzureRmLoadBalancerOutboundRules%2Fazuredeploy.json" target="_blank">
