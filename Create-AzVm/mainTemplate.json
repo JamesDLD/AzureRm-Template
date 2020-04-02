@@ -1,0 +1,530 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "tags": {
+            "type": "string",
+            "defaultValue": "{\"env\":\"prd\",\"project\":\"windows_virtual_desktop\",\"project_owner\":\"XXX@XXX\",\"region\":\"es\"}",
+            "metadata": {
+                "description": "Tags to apply on the Windows Virtual Desktop resources."
+            }
+        },
+        "ImageSource": {
+            "type": "string",
+            "metadata": {
+                "description": "Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks."
+            },
+            "defaultValue": "Gallery",
+            "allowedValues": [
+                "CustomVHD",
+                "CustomImage",
+                "Gallery"
+            ]
+        },
+        "vmImageVhdUri": {
+            "type": "string",
+            "metadata": {
+                "description": "(Required when ImageSource = CustomVHD) URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
+            },
+            "defaultValue": ""
+        },
+        "GalleryImageSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "(Required when ImageSource = Gallery) Gallery image SKU. Values without a numeric suffix, such as 1903, will use the latest release available in this template."
+            },
+            "allowedValues": [
+                "2016-Datacenter"
+            ],
+            "defaultValue": "2016-Datacenter"
+        },
+        "CustomImageSourceName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "(Required when ImageSource = CustomImage) Name of the managed disk."
+            }
+        },
+        "CustomImageSourceResourceGroup": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Resource group name for the managed disk, if you choose to provide one."
+            }
+        },
+        "vmNamePrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'wsus' as the prefix, VMs would be named 'wsus0', 'wsus1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
+            },
+            "defaultValue": "[take(toLower(resourceGroup().name), 10)]"
+        },
+        "NumberOfInstances": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of Virtual Machines to create."
+            }
+        },
+        "VMDiskType": {
+            "type": "string",
+            "allowedValues": [
+                "Premium_LRS",
+                "StandardSSD_LRS",
+                "Standard_LRS"
+            ],
+            "metadata": {
+                "description": "The VM disk type for the VM: Premium_LRS, Standard_LRS (Default) or StandardSSD_LRS."
+            },
+            "defaultValue": "Standard_LRS"
+        },
+        "osdiskSizeGB": {
+            "type": "int",
+            "metadata": {
+                "description": "The VM disk OS Size in GB."
+            },
+            "defaultValue": 127
+        },
+        "sizeOfEachDataDiskInGB": {
+            "type": "int",
+            "metadata": {
+                "description": "Size of each data disk in GB"
+            },
+            "defaultValue": 64
+        },
+        "VmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "The size of the session host VMs."
+            },
+            "defaultValue": "Standard_A2m_v2"
+        },
+        "PublicIp": {
+            "type": "bool",
+            "metadata": {
+                "description": "Use a public Ip."
+            },
+            "defaultValue": false
+        },
+        "enableAcceleratedNetworking": {
+            "type": "bool",
+            "metadata": {
+                "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+            },
+            "defaultValue": false
+        },
+        "UseManagedDisks": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Warning: Parameter 'UseManagedDisks' will not be allowed to be false, starting March 1st, 2020. True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
+            }
+        },
+        "storageAccountResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Warning: Parameter 'UseManagedDisks' will not be allowed to be false, starting March 1st, 2020. (Required when UseManagedDisks = False) The resource group containing the storage account of the image vhd file."
+            },
+            "defaultValue": ""
+        },
+        "domainToJoin": {
+            "type": "string",
+            "metadata": {
+                "description": "FQDN of the AD Domain to which session host VMs are going to be joined. For example, 'contoso.com'."
+            }
+        },
+        "existingDomainUPN": {
+            "type": "string",
+            "metadata": {
+                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
+            }
+        },
+        "existingDomainPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password that corresponds to the existing domain username."
+            }
+        },
+        "ouPath": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "(Optional) Specifiy an organizational unit (OU) to place the new virtual machines when joining the domain. If you do not have a specific OU to place the virtual machines, leave it blank. Example OU: 'OU=testOU;DC=domain;DC=Domain;DC=com'"
+            }
+        },
+        "existingVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the virtual network the VMs will be connected to."
+            }
+        },
+        "existingSubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The subnet the VMs will be placed in."
+            }
+        },
+        "virtualNetworkResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The resource group containing the existing virtual network."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "(Required for Azure Marketplace.) Leave as is, unless you would like to not use a location that is different from the location of the resouce group."
+            }
+        }
+    },
+    "variables": {
+        "tagsbase64": "[base64(parameters('tags'))]",
+        "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
+        "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]",
+        "VmNamesOutput": {
+            "copy": [
+                {
+                    "name": "VmNamesCopy",
+                    "count": "[parameters('NumberOfInstances')]",
+                    "input": {
+                        "name": "[concat(parameters('vmNamePrefix'), copyIndex('VmNamesCopy'))]"
+                    }
+                }
+            ]
+        },
+        "galleryImage": {
+            "2016-Datacenter": {
+                "publisher": "MicrosoftWindowsServer",
+                "offer": "WindowsServer",
+                "sku": "2016-Datacenter",
+                "version": "latest"
+            }
+        },
+        "imageName": "[concat(parameters('vmNamePrefix'), 'image')]",
+        "VMImageReference": {
+            "customimage": {
+                "id": "[resourceId(parameters('CustomImageSourceResourceGroup'), 'Microsoft.Compute/images', parameters('CustomImageSourceName'))]"
+            },
+            "gallery": "[variables('galleryimage')[parameters('GalleryImageSKU')]]"
+        },
+        "ImageSourceLower": "[toLower(parameters('ImageSource'))]",
+        "ManagedDisks": "[if(equals(variables('ImageSourceLower'), 'customvhd'), parameters('UseManagedDisks'), bool('true'))]",
+        "storageaccount": "[if(variables('ManagedDisks'), json('null'), concat(resourceId(parameters('storageAccountResourceGroupName'), 'Microsoft.Storage/storageAccounts', split(split(parameters('VmImageVhdUri'), '/')[2], '.' )[0])))]"
+    },
+    "functions": [
+        {
+            "namespace": "main",
+            "members": {
+                "getAvailabilitySet": {
+                    "parameters": [
+                        {
+                            "name": "rdshPrefix",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "type": "object",
+                        "value": {
+                            "id": "[resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), '-aset'))]"
+                        }
+                    }
+                },
+                "getVMImageReferenceCustomVHD": {
+                    "parameters": [
+                        {
+                            "name": "imageName",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "type": "object",
+                        "value": {
+                            "id": "[resourceId('Microsoft.Compute/images', parameters('imageName'))]"
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-08-01",
+            "name": "[concat(parameters('vmNamePrefix'), '-nsg')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allow-wsus-in-net",
+                        "properties": {
+                            "priority": 1000,
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "destinationPortRanges": [
+                                "10443"
+                            ],
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "deny-net",
+                        "properties": {
+                            "priority": 2000,
+                            "access": "Deny",
+                            "direction": "Inbound",
+                            "destinationPortRange": "*",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.Compute/availabilitySets",
+            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "name": "[concat(parameters('vmNamePrefix'), '-aset')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 2
+            },
+            "sku": {
+                "name": "[if(variables('ManagedDisks'), 'Aligned', 'Classic')]"
+            }
+        },
+        {
+            "condition": "[and(variables('ManagedDisks'), equals(variables('ImageSourceLower'), 'customvhd'))]",
+            "type": "Microsoft.Compute/images",
+            "apiVersion": "2018-10-01",
+            "name": "[variables('imageName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', parameters('vmNamePrefix'), '-aset')]"
+            ],
+            "properties": {
+                "storageProfile": {
+                    "osDisk": {
+                        "osType": "Windows",
+                        "osState": "Generalized",
+                        "blobUri": "[parameters('VmImageVhdUri')]",
+                        "storageAccountType": "[parameters('VMDiskType')]"
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "2018-11-01",
+            "type": "Microsoft.Network/networkInterfaces",
+            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "name": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-nic')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', parameters('vmNamePrefix'), '-aset')]",
+                "[concat('Microsoft.Network/publicIPAddresses/', concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-pip'))]",
+                "[concat('Microsoft.Network/networkSecurityGroups/', concat(parameters('vmNamePrefix'), '-nsg'))]"
+            ],
+            "copy": {
+                "name": "rdsh-nic-loop",
+                "count": "[parameters('NumberOfInstances')]"
+            },
+            "properties": {
+                "networkSecurityGroup": {
+                    "id": "[resourceId ('Microsoft.Network/networkSecurityGroups/', concat(parameters('vmNamePrefix'), '-nsg'))]"
+                },
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            /*
+"[if(parameters('PublicIp'), json('null')]"
+*/
+                            "publicIPAddress": {
+                                "id": "[resourceId ('Microsoft.Network/publicIPAddresses/', concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-pip'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnet-id')]"
+                            }
+                        }
+                    }
+                ],
+                "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]"
+            }
+        },
+        {
+            "condition": "[variables('ManagedDisks')]",
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.Compute/virtualMachines",
+            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "name": "[concat(if(variables('ManagedDisks'), '', 'null'), parameters('vmNamePrefix'), add(copyIndex(),1))]",
+            "location": "[parameters('location')]",
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('NumberOfInstances')]"
+            },
+            "metadata": {
+                "comments": "If the following conditional dependencies are not deployed, ARM will auto remove them from this dependsOn list"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/images/', variables('imageName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('vmNamePrefix'), add(copyIndex(),1), '-nic')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('VmSize')]"
+                },
+                "availabilitySet": "[main.getAvailabilitySet(parameters('vmNamePrefix'))]",
+                "osProfile": {
+                    "computerName": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1))]",
+                    "adminUsername": "[variables('existingDomainUsername')]",
+                    "adminPassword": "[parameters('existingDomainPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": "[if(equals(variables('ImageSourceLower'), 'customvhd'), main.getVMImageReferenceCustomVHD(variables('imageName')), variables('VMImageReference')[variables('ImageSourceLower')])]",
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "name": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-osdisk')]",
+                        "diskSizeGB": "[parameters('osdiskSizeGB')]",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('VMDiskType')]"
+                        }
+                    },
+                    "dataDisks": [
+                        {
+                            "diskSizeGB": "[parameters('sizeOfEachDataDiskInGB')]",
+                            "lun": 0,
+                            "createOption": "Empty",
+                            "name": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-datadisk1')]"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-nic'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                },
+                "licenseType": "Windows_Client"
+            }
+        },
+        {
+            "condition": "[not(parameters('PublicIp'))]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-pip')]",
+            "copy": {
+                "name": "vm-pip-loop",
+                "count": "[parameters('NumberOfInstances')]"
+            },
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            }
+        },
+        {
+            "condition": "[not(variables('ManagedDisks'))]",
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.Compute/virtualMachines",
+            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "name": "[concat(if(variables('ManagedDisks'), 'null', ''), parameters('vmNamePrefix'), add(copyIndex(),1))]",
+            "location": "[parameters('location')]",
+            "copy": {
+                "name": "rdsh-vm-loop-unmanaged",
+                "count": "[parameters('NumberOfInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('vmNamePrefix'), add(copyIndex(),1), '-nic')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('VmSize')]"
+                },
+                "availabilitySet": "[main.getAvailabilitySet(parameters('vmNamePrefix'))]",
+                "osProfile": {
+                    "computerName": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1))]",
+                    "adminUsername": "[variables('existingDomainUsername')]",
+                    "adminPassword": "[parameters('existingDomainPassword')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "name": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-osDisk')]",
+                        "osType": "Windows",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage",
+                        "image": {
+                            "uri": "[parameters('VmImageVhdUri')]"
+                        },
+                        "vhd": {
+                            "uri": "[if(variables('ManagedDisks'), json('null'), concat(reference(variables('storageaccount'), '2018-11-01').primaryEndpoints.blob, 'vhds/', parameters('vmNamePrefix'), add(copyIndex(),1), '-osdisk.vhd'))]"
+                        }
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-nic'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                },
+                "licenseType": "Windows_Client"
+            }
+        },
+        {
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1), '/joindomain')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('vmNamePrefix'), add(copyIndex(),1))]"
+            ],
+            "copy": {
+                "name": "rdsh-domain-join-loop",
+                "count": "[parameters('NumberOfInstances')]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "JsonADDomainExtension",
+                "typeHandlerVersion": "1.3",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "name": "[parameters('domainToJoin')]",
+                    "ouPath": "[parameters('ouPath')]",
+                    "user": "[parameters('existingDomainUPN')]",
+                    "restart": "true",
+                    "options": "3"
+                },
+                "protectedSettings": {
+                    "password": "[parameters('existingDomainPassword')]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "VmNamesObject": {
+            "value": "[variables('VmNamesOutput')]",
+            "type": "object"
+        }
+    }
+}

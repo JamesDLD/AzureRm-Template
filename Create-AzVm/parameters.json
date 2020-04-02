@@ -1,0 +1,45 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "tags": {
+            "value": "{\"env\":\"prd\",\"project\":\"wsus\",\"project_owner\":\"hello@dld23.com\",\"region\":\"fr\"}"
+        },
+        "vmNamePrefix": {
+            "value": "myvmprefix"
+        },
+        "NumberOfInstances": {
+            "value": 1
+        },
+        "VmSize": {
+            "value": "Standard_E2_v3"
+        },
+        "sizeOfEachDataDiskInGB": {
+            "value": 256
+        },
+        "enableAcceleratedNetworking": {
+            "value": false
+        },
+        "domainToJoin": {
+            "value": "mydomain.com"
+        },
+        "existingDomainUPN": {
+            "value": "adm-account@mydomain.com"
+        },
+        "existingDomainPassword": {
+            "value": "Passw0rd!123"
+        },
+        "existingVnetName": {
+            "value": "VnetName"
+        },
+        "existingSubnetName": {
+            "value": "Subnet-1"
+        },
+        "virtualNetworkResourceGroupName": {
+            "value": "RGName"
+        },
+        "location": {
+            "value": "westeurope"
+        }
+    }
+}
