@@ -1,0 +1,92 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceType": {
+            "type": "string",
+            "defaultValue": "Microsoft.Network/virtualNetworks",
+            "metadata":{
+                "description": "Type of resource including resource provider namespace."
+            }
+        },
+        "existingVirtualNetworkSubscriptionId": {
+            "type": "string",
+            "metadata":{
+                "description": "Azure Subscription id of the Virtual Network Resource we want to get."
+            }
+        },
+        "existingVirtualNetworkResourceGroupName": {
+            "type": "string",
+            "metadata":{
+                "description": "Resource Group of the Virtual Network Resource we want to get."
+            }
+        },
+        "existingVirtualNetworkName": {
+            "type": "string",
+            "metadata":{
+                "description": "Virtual Network name we want to get."
+            }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+    ],
+    "outputs": {
+        "resourceIDwithSubRgVnetId": {
+            "type": "string",
+            "value": "[main.getResource(parameters('resourceType'),parameters('existingVirtualNetworkSubscriptionId'), parameters('existingVirtualNetworkResourceGroupName'),parameters('existingVirtualNetworkName')).id]"
+        },
+        "resourceIDwithRgVnetId": {
+            "type": "string",
+            "value": "[main.getResource(parameters('resourceType'),'null', parameters('existingVirtualNetworkResourceGroupName'),parameters('existingVirtualNetworkName')).id]"
+        },
+        "resourceIDVnetId": {
+            "type": "string",
+            "value": "[main.getResource(parameters('resourceType'),'null', 'null',parameters('existingVirtualNetworkName')).id]"
+        },
+        "resourceIDVnet": {
+            "type": "object",
+            "value": "[reference(main.getResource(parameters('resourceType'),'null', 'null',parameters('existingVirtualNetworkName')).id, '2020-03-01', 'Full')]"
+        }
+    },
+"functions": [
+    {
+        "namespace": "main",
+        "members": {
+            "getResource": {
+                "parameters": [
+                    {
+                        "name": "resourceType",
+                        "type": "string"
+                    },
+                    {
+                        "name": "otherSubscriptionId",
+                        "type": "string"
+                    },
+                    {
+                        "name": "otherResourceGroup",
+                        "type": "string"
+                    },
+                    {
+                        "name": "resourceName",
+                        "type": "string"
+                    }
+                ],
+                "output": {
+                    "type": "object",
+                    "value": {
+                        "id": "[
+                            if(equals(parameters('otherSubscriptionId'), 'null'),
+                                if(equals(parameters('otherResourceGroup'), 'null'),
+                                    resourceId(parameters('resourceType'), parameters('resourceName')),
+                                    resourceId(parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName'))),
+                            resourceId(parameters('otherSubscriptionId'), parameters('otherResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('resourceName')))
+                            ]"
+                    }
+                }
+            }
+        }
+    }
+]
+}
