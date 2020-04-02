@@ -6,7 +6,7 @@ Share Azure Rm Templates and Tutoriels with the community
 
 | Description  | Link |
 | ------------- | ------------- |
-| A User-defined function in Azure Resource Manager template | [json template](User-Defined-Function-Demo) <br> [Medium article](https://medium.com/@jamesdld23/a-user-defined-function-in-azure-resource-manager-template-dbba3d834c8b)|
+| A User-defined function in Azure Resource Manager template | [json template](User-Defined-Function-Demo) <br> [Medium article](https://medium.com/faun/a-user-defined-function-in-azure-resource-manager-template-dbba3d834c8b)|
 
 
 
