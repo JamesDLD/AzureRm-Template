@@ -81,7 +81,7 @@
                                     if(equals(parameters('otherResourceGroup'), 'null'),
                                         resourceId(parameters('resourceType'), parameters('resourceName')),
                                         resourceId(parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName'))),
-                                resourceId(parameters('otherSubscriptionId'), parameters('otherResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('resourceName')))
+                                resourceId(parameters('otherSubscriptionId'), parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName')))
                                 ]"
                         }
                     }
