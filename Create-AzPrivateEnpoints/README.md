@@ -8,14 +8,15 @@ Note: this template doesn't create the DNS record to access the PaaS Service thr
 > **Comments:**
 > - Note 1: The Private Endpoint should be in the same region and subscription of its Virtual Network.
 > - Note 2: The Private Endpoint could be in a different resource group than its Virtual Network.
-> - Note 3: Only one group Id per Private Endpoint is permitted when connecting to a first-party resource.
+> - Note 3: Only one group Id per Private Endpoint is permitted when connecting to a third-party resource.
 
 Deployment through the Portal
 ------------
 
-Create an Azure Private Endpoint - <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzPrivateEnpoints%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzPrivateEnpoints%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
+
 <a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzPrivateEnpoints%2Fazuredeploy.json" target="_blank">
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
