@@ -1,0 +1,155 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "tags": {
+            "type": "string",
+            "defaultValue": "{\"env\":\"prd\",\"project\":\"tbd\",\"project_owner\":\"XXX@XXX\",\"region\":\"fr\"}",
+            "metadata": {
+                "description": "Tags to apply on the Private Endpoint resource."
+            }
+        },
+        "existingVirtualNetworkResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group of the Virtual Network Private Endpoint Ip Address."
+            },
+            "defaultValue": "null"
+        },
+        "existingVirtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual Network name of the Private Endpoint Ip Address."
+            }
+        },
+        "existingVirtualNetworkSubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual Network Subnet of the Private Endpoint Ip Address."
+            }
+        },
+        "existingResourceSubscriptionId": {
+            "type": "string",
+            "metadata": {
+                "description": "Subscription Id of the Resource that will be linked to the Private Endpoint."
+            },
+            "defaultValue": "null"
+        },
+        "existingResourceResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group of the Resource that will be linked to the Private Endpoint."
+            },
+            "defaultValue": "null"
+        },
+        "existingResourceName": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource name of the Resource that will be linked to the Private Endpoint."
+            }
+        },
+        "existingResourceType": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Type including resource provider namespace of the Resource that will be linked to the Private Endpoint."
+            }
+        },
+        "resourcePrivateEndpointIteration": {
+            "type": "string",
+            "metadata": {
+                "description": "Iteration of the resource's private endpoint, a resource can have several private endpoints."
+            },
+            "defaultValue": "1"
+        },
+        "groupIds": {
+            "type": "array",
+            "metadata": {
+                "description": "The ID(s) of the group(s) obtained from the remote resource that this private endpoint should connect to. - string"
+            }
+        }
+    },
+    "variables": {
+        "tags": "[base64ToJson(base64(parameters('tags')))]"
+    },
+    "resources": [
+       {
+           "comments": "Create the Private Endpoint in the Resource Group used for the Deployment and ling it to a resource in the Subscription and Resource Group of you choice.
+                        Note 1: The Private Endpoint should be in the same region and subscription of its Virtual Network.
+                        Note 2: The Private Endpoint could be in a different resource group than its Virtual Network.
+                        Note 3: Only one group Id per Private Endpoint is permitted when connecting to a first-party resource.",
+            "name": "[concat(parameters('existingResourceName'),'-pe',parameters('resourcePrivateEndpointIteration'))]",
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": "[variables('tags')]",
+            "properties": {
+                "subnet": {
+                    "id": "[concat(main.getResource('Microsoft.Network/virtualNetworks','null', parameters('existingVirtualNetworkResourceGroupName'),parameters('existingVirtualNetworkName')).id, '/subnets/',parameters('existingVirtualNetworkSubnetName'))]"
+                },
+                "privateLinkServiceConnections": [
+                    {
+                        "properties": {
+                            "privateLinkServiceId": "[main.getResource(parameters('existingResourceType'),parameters('existingResourceSubscriptionId'), parameters('existingResourceResourceGroupName'),parameters('existingResourceName')).id]",
+                            "groupIds": "[parameters('groupIds')]",
+                            "privateLinkServiceConnectionState": {
+                                "description": "Auto-Approved",
+                                "actionsRequired": "None"
+                            }
+                        },
+                        "name": "[concat(parameters('existingResourceName'),'-pe',parameters('resourcePrivateEndpointIteration'))]"
+                    }
+                ],
+                "manualPrivateLinkServiceConnections": "[json('null')]"
+            }
+        }
+    ],
+    "outputs": {
+        "networkInterfaceId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', concat(parameters('existingResourceName'),'-pe',parameters('resourcePrivateEndpointIteration')))).networkInterfaces[0].id]"
+        },
+        "privateLinkServiceName": {
+            "type": "string",
+            "value": "[parameters('existingResourceName')]"
+        }            
+    },
+    "functions": [
+        {
+            "namespace": "main",
+            "members": {
+                "getResource": {
+                    "parameters": [
+                        {
+                            "name": "resourceType",
+                            "type": "string"
+                        },
+                        {
+                            "name": "otherSubscriptionId",
+                            "type": "string"
+                        },
+                        {
+                            "name": "otherResourceGroup",
+                            "type": "string"
+                        },
+                        {
+                            "name": "resourceName",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "type": "object",
+                        "value": {
+                            "id": "[
+                                if(equals(parameters('otherSubscriptionId'), 'null'),
+                                    if(equals(parameters('otherResourceGroup'), 'null'),
+                                        resourceId(parameters('resourceType'), parameters('resourceName')),
+                                        resourceId(parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName'))),
+                                resourceId(parameters('otherSubscriptionId'), parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName')))
+                                ]"
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
