@@ -43,7 +43,7 @@ Select-AzSubscription -Name $azureRmSubscriptionName -Context $AzureRmContext -F
 
 #ARM Deployment
 New-AzResourceGroupDeployment -Name "private-endpoint-$($existingResourceName)-pe$($resourcePrivateEndpointIteration)" -ResourceGroupName $existingResourceResourceGroupName `
-    -TemplateFile .\mainTemplate.json `
+    -TemplateUri https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzPrivateEnpoints/mainTemplate.json `
     -tags $tags `
     -existingVirtualNetworkResourceGroupName $existingVirtualNetworkResourceGroupName `
     -existingVirtualNetworkName $existingVirtualNetworkName `

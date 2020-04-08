@@ -73,10 +73,12 @@
     },
     "resources": [
        {
+           /*
            "comments": "Create the Private Endpoint in the Resource Group used for the Deployment and ling it to a resource in the Subscription and Resource Group of you choice.
                         Note 1: The Private Endpoint should be in the same region and subscription of its Virtual Network.
                         Note 2: The Private Endpoint could be in a different resource group than its Virtual Network.
                         Note 3: Only one group Id per Private Endpoint is permitted when connecting to a first-party resource.",
+                        */
             "name": "[concat(parameters('existingResourceName'),'-pe',parameters('resourcePrivateEndpointIteration'))]",
             "type": "Microsoft.Network/privateEndpoints",
             "apiVersion": "2019-11-01",
