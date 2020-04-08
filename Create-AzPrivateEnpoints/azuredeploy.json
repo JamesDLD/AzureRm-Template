@@ -12,7 +12,7 @@
         "existingVirtualNetworkResourceGroupName": {
             "type": "string",
             "metadata": {
-                "description": "Resource Group of the Virtual Network Private Endpoint Ip Address."
+                "description": "Resource Group of the Virtual Network Private Endpoint Ip Address. Leave it to null if it's the same that the Private Endpoint."
             },
             "defaultValue": "null"
         },
@@ -31,14 +31,14 @@
         "existingResourceSubscriptionId": {
             "type": "string",
             "metadata": {
-                "description": "Subscription Id of the Resource that will be linked to the Private Endpoint."
+                "description": "Subscription Id of the Resource that will be linked to the Private Endpoint. Leave it to null if it's the same that the Private Endpoint."
             },
             "defaultValue": "null"
         },
         "existingResourceResourceGroupName": {
             "type": "string",
             "metadata": {
-                "description": "Resource Group of the Resource that will be linked to the Private Endpoint."
+                "description": "Resource Group of the Resource that will be linked to the Private Endpoint. Leave it to null if it's the same that the Private Endpoint."
             },
             "defaultValue": "null"
         },
@@ -57,7 +57,7 @@
         "resourcePrivateEndpointIteration": {
             "type": "string",
             "metadata": {
-                "description": "Iteration of the resource's private endpoint, a resource can have several private endpoints."
+                "description": "Iteration of the resource's private endpoint, a resource can have several private endpoints. Leave it 1 if it's the first Private Endpoint of the resource."
             },
             "defaultValue": "1"
         },
