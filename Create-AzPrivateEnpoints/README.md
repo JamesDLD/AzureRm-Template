@@ -13,10 +13,10 @@ Comments:
 Deployment through the Portal
 ------------
 
-Create an Azure Private Endpoint - <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzPrivateEnpoints%2FmainTemplate.json" target="_blank">
+Create an Azure Private Endpoint - <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzPrivateEnpoints%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzPrivateEnpoints%2FmainTemplate.json" target="_blank">
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzPrivateEnpoints%2Fazuredeploy.json" target="_blank">
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
@@ -47,7 +47,7 @@ Select-AzSubscription -Name $azureRmSubscriptionName -Context $AzureRmContext -F
 
 #ARM Deployment
 New-AzResourceGroupDeployment -Name "private-endpoint-$($existingResourceName)-pe$($resourcePrivateEndpointIteration)" -ResourceGroupName $existingResourceResourceGroupName `
-    -TemplateUri https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzPrivateEnpoints/mainTemplate.json `
+    -TemplateUri https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzPrivateEnpoints/azuredeploy.json `
     -tags $tags `
     -existingVirtualNetworkResourceGroupName $existingVirtualNetworkResourceGroupName `
     -existingVirtualNetworkName $existingVirtualNetworkName `
