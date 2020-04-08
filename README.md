@@ -15,10 +15,10 @@ Share Azure Rm Templates and Tutoriels with the community
 
 | Description  | Link |
 | ------------- | ------------- |
-| Create a Standard Public Load Balancer with outbound rules | [Create-AzureRmLoadBalancerOutboundRules](Create-AzureRmLoadBalancerOutboundRules) |
-| Create a Palo Alto VM-Series Firewall with <br> * Availability Zones  <br> * Managed Disks  <br> * Accelerated Networking <br> * Boot Diagnostics | [Create-AzureRmPaloAltoAz](Create-AzureRmPaloAltoAz) |
-| Create an Azure Bastion host | [Create-AzBastion](Create-AzBastion) |
-| Windows Virtual Desktop hostpool | [WVD-HP](Create%20and%20provision%20WVD%20host%20pool) |
+| Create a Standard Public Load Balancer with outbound rules | [loadBalancers](Create-AzureRmLoadBalancerOutboundRules) |
+| Create a Palo Alto VM-Series Firewall with <br> * Availability Zones  <br> * Managed Disks  <br> * Accelerated Networking <br> * Boot Diagnostics | [virtualMachines](Create-AzureRmPaloAltoAz) |
+| Create an Azure Bastion host | [bastionHosts](Create-AzBastion) |
+| Windows Virtual Desktop hostpool | [virtualMachines/extensions](Create%20and%20provision%20WVD%20host%20pool) |
 | Create an Azure Private Endpoint | [privateEndpoints](Create-AzPrivateEnpoints) |
 
 
