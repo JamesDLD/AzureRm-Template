@@ -5,6 +5,10 @@ Content
 ARM Template that create [Azure Private Endpoint](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview).
 Note: this template doesn't create the DNS record to access the PaaS Service through private endpoints, please refer to the following [guide](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview#dns-configuration) to create the correct DNS record.
 
+Comments:
+- Note 1: The Private Endpoint should be in the same region and subscription of its Virtual Network.
+- Note 2: The Private Endpoint could be in a different resource group than its Virtual Network.
+- Note 3: Only one group Id per Private Endpoint is permitted when connecting to a first-party resource.
 
 Deployment through the Portal
 ------------
