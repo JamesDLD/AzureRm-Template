@@ -135,13 +135,7 @@
                     "output": {
                         "type": "object",
                         "value": {
-                            "id": "[
-                                if(equals(parameters('otherSubscriptionId'), 'null'),
-                                    if(equals(parameters('otherResourceGroup'), 'null'),
-                                        resourceId(parameters('resourceType'), parameters('resourceName')),
-                                        resourceId(parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName'))),
-                                resourceId(parameters('otherSubscriptionId'), parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName')))
-                                ]"
+                            "id": "[if(equals(parameters('otherSubscriptionId'), 'null'),if(equals(parameters('otherResourceGroup'), 'null'),resourceId(parameters('resourceType'), parameters('resourceName')),resourceId(parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName'))),resourceId(parameters('otherSubscriptionId'), parameters('otherResourceGroup'), parameters('resourceType'), parameters('resourceName')))]"
                         }
                     }
                 }
