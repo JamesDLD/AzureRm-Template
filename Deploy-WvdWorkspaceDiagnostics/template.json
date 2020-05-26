@@ -1,0 +1,53 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceName": {
+            "type": "String"
+        },
+        "location": {
+            "type": "String"
+        },
+        "logAnalytics": {
+            "type": "String"
+        },
+        "logsEnabled": {
+            "type": "String"
+        },
+        "profileName": {
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.DesktopVirtualization/workspaces/providers/diagnosticSettings",
+            "apiVersion": "2017-05-01-preview",
+            "name": "[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', parameters('profileName'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [],
+            "properties": {
+                "workspaceId": "[parameters('logAnalytics')]",
+                "logs": [
+                    {
+                        "category": "Checkpoint",
+                        "enabled":true
+                    },
+                    {
+                        "category": "Error",
+                        "enabled": "[parameters('logsEnabled')]"
+                    },
+                    {
+                        "category": "Management",
+                        "enabled": "[parameters('logsEnabled')]"
+                    },
+                    {
+                        "category": "Feed",
+                        "enabled": "[parameters('logsEnabled')]"
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}

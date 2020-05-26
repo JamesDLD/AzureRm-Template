@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceName": {
+            "value": "demo-wvd-wks1"
+        },
+        "location": {
+            "value": "westus2"
+        },
+        "logAnalytics": {
+            "value": "/subscriptions/xxxxx-tobereplaced-xxxxx/resourcegroups/jdld-we-demo-wvd-rg1/providers/microsoft.operationalinsights/workspaces/jdld-we-demo-wvd-wu2-logaw1"
+        },
+        "logsEnabled": {
+            "value": "True"
+        },
+        "profileName": {
+            "value": "setbypolicy_logAnalytics"
+        }
+    }
+}
