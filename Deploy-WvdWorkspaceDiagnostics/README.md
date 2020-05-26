@@ -1,3 +1,5 @@
+[Previous page >](../)
+
 # Content
 Demonstrate how to send the diagnostic settings of a Windows Virtual Desktop workspace to a Log Analytics workspace.
 

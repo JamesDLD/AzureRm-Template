@@ -1,3 +1,5 @@
+[Previous page >](../)
+
 # Adapted from
 Cloned and adapted from [Azure / RDS-Templates wvd-templates/Create and provision WVD host pool](https://github.com/Azure/RDS-Templates/tree/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool)
 

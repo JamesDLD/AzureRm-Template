@@ -1,3 +1,5 @@
+[Previous page >](../)
+
 # Content
 Contain a script sample that demonstrates on how to use [User-defined functions](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-user-defined-functions) in Azure Resource Manager template.
 

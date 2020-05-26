@@ -1,3 +1,5 @@
+[Previous page >](../)
+
 # Content
 Contain a script sample that demonstrates how to create a VM.
 
