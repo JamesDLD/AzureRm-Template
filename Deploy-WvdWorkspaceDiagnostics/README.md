@@ -20,7 +20,7 @@ $DeploymentName="WVD-Workspace-DiagnosticsSettings"
 $RgName="jdld-we-demo-wvd-rg1"
 
 New-AzResourceGroupDeployment -Name $DeploymentName -ResourceGroupName $RgName `
-  -TemplateFile .\template.json `
-  -TemplateParameterFile .\parameters.json
+  -TemplateParameterFile .\parameters.json `
+  -TemplateUri https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Deploy-WvdWorkspaceDiagnostics/template.json 
 
 ```
