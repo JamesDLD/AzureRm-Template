@@ -20,7 +20,7 @@ Share Azure Rm Templates and Tutoriels with the community
 | Create an Azure Bastion host | [bastionHosts](Create-AzBastion) |
 | Windows Virtual Desktop hostpool | [virtualMachines/extensions](Create%20and%20provision%20WVD%20host%20pool) |
 | Create an Azure Private Endpoint | [privateEndpoints](Create-AzPrivateEnpoints) |
-| Send diagnostic settings of a Windows Virtual Desktop workspace to a Log Analytics workspace | [Microsoft.DesktopVirtualization/workspaces/providers/diagnosticSettings](Deploy-WvdWorkspaceDiagnostics) |
+| Diagnostic settings of a Windows Virtual Desktop Workspace to a Log Analytics workspace | [diagnosticSettings](Deploy-WvdWorkspaceDiagnostics) |
 
 
 
