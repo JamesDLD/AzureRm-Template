@@ -98,13 +98,6 @@
             },
             "defaultValue": "Standard_A2m_v2"
         },
-        "PublicIp": {
-            "type": "bool",
-            "metadata": {
-                "description": "Use a public Ip."
-            },
-            "defaultValue": false
-        },
         "enableAcceleratedNetworking": {
             "type": "bool",
             "metadata": {
@@ -327,7 +320,6 @@
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Compute/availabilitySets/', parameters('vmNamePrefix'), '-aset')]",
-                "[concat('Microsoft.Network/publicIPAddresses/', concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-pip'))]",
                 "[concat('Microsoft.Network/networkSecurityGroups/', concat(parameters('vmNamePrefix'), '-nsg'))]"
             ],
             "copy": {
@@ -342,12 +334,6 @@
                     {
                         "name": "ipconfig",
                         "properties": {
-                            /*
-"[if(parameters('PublicIp'), json('null')]"
-*/
-                            "publicIPAddress": {
-                                "id": "[resourceId ('Microsoft.Network/publicIPAddresses/', concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-pip'))]"
-                            },
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
                                 "id": "[variables('subnet-id')]"
@@ -418,24 +404,6 @@
                     }
                 },
                 "licenseType": "Windows_Client"
-            }
-        },
-        {
-            "condition": "[not(parameters('PublicIp'))]",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "tags": "[base64ToJson(variables('tagsbase64'))]",
-            "apiVersion": "2018-11-01",
-            "name": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-pip')]",
-            "copy": {
-                "name": "vm-pip-loop",
-                "count": "[parameters('NumberOfInstances')]"
-            },
-            "location": "[parameters('location')]",
-            "sku": {
-                "name": "Standard"
-            },
-            "properties": {
-                "publicIPAllocationMethod": "Static"
             }
         },
         {
