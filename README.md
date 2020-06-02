@@ -9,7 +9,7 @@ Share Azure Rm Templates and Tutoriels with the community
 | A User-defined function in Azure Resource Manager template | [json template](User-Defined-Function-Demo) <br> [Medium article](https://medium.com/faun/a-user-defined-function-in-azure-resource-manager-template-dbba3d834c8b)|
 
 
-# Template
+# Azure Depoyment Template
 
 | Description  | Link |
 | ------------- | ------------- |
@@ -20,6 +20,12 @@ Share Azure Rm Templates and Tutoriels with the community
 | Create an Azure Private Endpoint | [privateEndpoints](Create-AzPrivateEnpoints) |
 | Diagnostic settings of a Windows Virtual Desktop Workspace to a Log Analytics workspace | [diagnosticSettings](Deploy-WvdWorkspaceDiagnostics) |
 | Create a VM, with NSG on an existing Vnet/Subnet | [Microsoft.Compute/virtualMachines](Create-AzVm) |
+
+# Azure Policy
+
+| Description  | Link |
+| ------------- | ------------- |
+| Diagnostic Settings for Azure Windows Virtual Desktop resources | [DesktopVirtualization](Create-WvdDiagnosticsPolicy) |
 
 
 # Other link
