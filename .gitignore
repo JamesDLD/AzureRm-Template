@@ -3,6 +3,7 @@
 
 # Log directory
 Trash/
+misc/
 
 # Secret files
 Deploy.ps1
