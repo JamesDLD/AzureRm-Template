@@ -2,11 +2,11 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "tags": {
+        "additional_tags": {
             "type": "string",
-            "defaultValue": "{\"env\":\"prd\",\"project\":\"tbd\",\"project_owner\":\"XXX@XXX\",\"region\":\"fr\"}",
+            "defaultValue": "{}",
             "metadata": {
-                "description": "Tags to apply on the Private Endpoint resource."
+                "description": "Option Tags to apply on the resources in addition to it's Resource group tags, sample {\"env\":\"prd\"}"
             }
         },
         "existingVirtualNetworkResourceGroupName": {
@@ -66,19 +66,41 @@
             "metadata": {
                 "description": "The ID(s) of the group(s) obtained from the remote resource that this private endpoint should connect to. - string"
             }
+        },
+        "privateDnsZoneName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the Name of the Private DNS Zone Group."
+            },
+            "defaultValue": "null"
+        },
+        "privateDnsZoneSubscriptionId": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the Subscription Id of the Private DNS Zone Group. Don't provide it if the DNS zone is located in the same subscription than the private endpoint."
+            },
+            "defaultValue": "null"
+        },
+        "privateDnsZoneResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the Resource of the Private DNS Zone Group. Don't provide it if the DNS zone is located in the same subscription than the private endpoint."
+            },
+            "defaultValue": "null"
         }
     },
     "variables": {
-        "tags": "[base64ToJson(base64(parameters('tags')))]"
+        "additional_tags": "[base64ToJson(base64(parameters('additional_tags')))]",
+        "privateDns": "[if(equals(parameters('privateDnsZoneName'), 'null'), bool('false'), bool('true'))]"
     },
     "resources": [
         {
-            "comments": "Create the Private Endpoint in the Resource Group used for the Deployment and ling it to a resource in the Subscription and Resource Group of you choice.Note 1: The Private Endpoint should be in the same region and subscription of its Virtual Network. Note 2: The Private Endpoint could be in a different resource group than its Virtual Network. Note 3: Only one group Id per Private Endpoint is permitted when connecting to a third-party resource.",
+            "comments": "Create the Private Endpoint in the Resource Group used for the Deployment and link it to a resource in the Subscription and Resource Group of you choice. Note 1: The Private Endpoint should be in the same region and subscription of its Virtual Network. Note 2: The Private Endpoint could be in a different resource group than its Virtual Network. Note 3: Only one group Id per Private Endpoint is permitted when connecting to a third-party resource.",
             "name": "[concat(parameters('existingResourceName'),'-pe',parameters('resourcePrivateEndpointIteration'))]",
             "type": "Microsoft.Network/privateEndpoints",
-            "apiVersion": "2019-11-01",
+            "apiVersion": "2020-04-01",
             "location": "[resourceGroup().location]",
-            "tags": "[variables('tags')]",
+            "tags": "[union(variables('additional_tags'),resourceGroup().tags)]",
             "properties": {
                 "subnet": {
                     "id": "[concat(main.getResource('Microsoft.Network/virtualNetworks','null', parameters('existingVirtualNetworkResourceGroupName'),parameters('existingVirtualNetworkName')).id, '/subnets/',parameters('existingVirtualNetworkSubnetName'))]"
@@ -97,7 +119,29 @@
                     }
                 ],
                 "manualPrivateLinkServiceConnections": "[json('null')]"
-            }
+            },
+            "resources": [
+                {
+                    "comments": "Create the DNS record in an Azure Private DNS Zone.",
+                    "condition": "[variables('privateDns')]",
+                    "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+                    "apiVersion": "2020-04-01",
+                    "name": "[concat(parameters('existingResourceName'),'-pe',parameters('resourcePrivateEndpointIteration'),'/',parameters('privateDnsZoneName'))]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Network/privateEndpoints', concat(parameters('existingResourceName'),'-pe',parameters('resourcePrivateEndpointIteration')))]"
+                    ],
+                    "properties": {
+                        "privateDnsZoneConfigs": [
+                            {
+                                "name": "[parameters('privateDnsZoneName')]",
+                                "properties": {
+                                    "privateDnsZoneId": "[main.getResource('Microsoft.Network/privateDnsZones',parameters('privateDnsZoneSubscriptionId'), parameters('privateDnsZoneResourceGroupName'),parameters('privateDnsZoneName')).id]"
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
         }
     ],
     "outputs": {

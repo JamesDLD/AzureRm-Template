@@ -2,11 +2,14 @@
 
 Content
 ------------
-ARM Template that create [Azure Private Endpoint](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview).
-Note: this template doesn't create the DNS record to access the PaaS Service through private endpoints, please refer to the following [guide](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview#dns-configuration) to create the correct DNS record.
+This template creates an [Azure Private Endpoint](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview) based on your Network Topology, you can also use it to create the associated DNS private record.
+
+- Your can refer to the following article for more information : [Network Topologies for Azure Private Endpoints](https://medium.com/faun/network-topologies-for-azure-private-endpoints-ed7c968b0acd).
+
+- The following [guide](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-dns#azure-services-dns-zone-configuration) reminds the recommended DNS zone names to use with Private Endpoints.
 
 > **Comments:**
-> - Note 1: The Private Endpoint should be in the same region and subscription of its Virtual Network.
+> - Note 1: The Private Endpoint should be in the same region and subscription than its Virtual Network.
 > - Note 2: The Private Endpoint could be in a different resource group than its Virtual Network.
 > - Note 3: Only one group Id per Private Endpoint is permitted when connecting to a third-party resource.
 
@@ -27,37 +30,41 @@ Deployment through the PowerShell
 
 ```ps
 
-#Variable
-$azureRmSubscriptionName="Your Azure Subscrition Name"
-$tags = "{""env"":""dev"",""project"":""demo"",""project_owner"":""james@dld23.com""}""" 
-$existingVirtualNetworkResourceGroupName="The Vnet Rg Name" #Set it to null if it's the same than the Private Endpoint
-$existingVirtualNetworkName="The Vnet Name"
-$existingVirtualNetworkSubnetName="The Subnet Name"
-$existingResourceSubscriptionId="null" #Set it to null or do not call it from the template if the resource is in the same subscription that your private endpoint
-$existingResourceResourceGroupName="The Private Endpoint Rg Name"
-$existingResourceName="The Resource name to link to the private Endpoint"
-$existingResourceType="Microsoft.Sql/servers" #Resource Type including resource provider namespace of the Resource that will be linked to the Private Endpoint
-$groupId="sqlServer" #The ID of the group obtained from the remote resource that this private endpoint should connect to
-$resourcePrivateEndpointIteration="1" #Stands for the first private endpoint of your resource, a resource can have several private endpoints.
+## Variable
+$AzureRmSubscriptionName = "mvp-sub1"
+$RgName = "dld-corp-mvp-dataplatform"
 
+$existingResourceName = "dldcorpmvpadls"
+$existingResourceType = "Microsoft.Storage/storageAccounts"
+$groupId = "blob"
+$resourcePrivateEndpointIteration = "1"
+$DeploymentName = "$($existingResourceName)-pe$($resourcePrivateEndpointIteration)"
 
-#Authentication
-Connect-AzAccount
-$AzureRmContext = Get-AzSubscription -SubscriptionName $azureRmSubscriptionName | Set-AzContext -ErrorAction Stop
-Select-AzSubscription -Name $azureRmSubscriptionName -Context $AzureRmContext -Force -ErrorAction Stop
+$existingVirtualNetworkResourceGroupName = "jdld-we-demo-wvd-rg1"
+$existingVirtualNetworkName = "jdld-we-demo-wvd-vnet1"
+$existingVirtualNetworkSubnetName = "endpoint-snet1"
 
-#ARM Deployment
-New-AzResourceGroupDeployment -Name "private-endpoint-$($existingResourceName)-pe$($resourcePrivateEndpointIteration)" -ResourceGroupName $existingResourceResourceGroupName `
-    -TemplateUri https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzPrivateEnpoints/azuredeploy.json `
-    -tags $tags `
-    -existingVirtualNetworkResourceGroupName $existingVirtualNetworkResourceGroupName `
-    -existingVirtualNetworkName $existingVirtualNetworkName `
-    -existingVirtualNetworkSubnetName $existingVirtualNetworkSubnetName `
-    -existingResourceSubscriptionId $existingResourceSubscriptionId `
-    -existingResourceResourceGroupName $existingResourceResourceGroupName `
-    -existingResourceName $existingResourceName `
-    -existingResourceType $existingResourceType `
-    -groupIds @($groupId) `
-    -resourcePrivateEndpointIteration $resourcePrivateEndpointIteration -ErrorAction Stop
+$privateDnsZoneResourceGroupName = "infr-hub-prd-rg1"
+$privateDnsZoneName = "privatelink.blob.core.windows.net"
+
+## Connectivity
+# Login first with Connect-AzAccount if not using Cloud Shell
+$AzureRmContext = Get-AzSubscription -SubscriptionName $AzureRmSubscriptionName | Set-AzContext -ErrorAction Stop
+Select-AzSubscription -Name $AzureRmSubscriptionName -Context $AzureRmContext -Force -ErrorAction Stop
+
+## Action
+Write-Host "Deploying : $DeploymentName in the resource group : $RgName" -ForegroundColor Cyan
+New-AzResourceGroupDeployment -Name "$($existingResourceName)-pe$($resourcePrivateEndpointIteration)" -ResourceGroupName $RgName `
+  -TemplateUri https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzPrivateEnpoints/template.json `
+  -existingResourceName $existingResourceName `
+  -groupIds @($groupId) `
+  -resourcePrivateEndpointIteration $resourcePrivateEndpointIteration `
+  -existingResourceType $existingResourceType `
+  -existingVirtualNetworkResourceGroupName $existingVirtualNetworkResourceGroupName `
+  -existingVirtualNetworkName $existingVirtualNetworkName `
+  -existingVirtualNetworkSubnetName $existingVirtualNetworkSubnetName `
+  -privateDnsZoneResourceGroupName $privateDnsZoneResourceGroupName `
+  -privateDnsZoneName $privateDnsZoneName `
+  -Confirm -ErrorAction Stop
 
 ```
