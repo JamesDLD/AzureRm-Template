@@ -3,40 +3,40 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "tags": {
-            "value": "{\"env\":\"prd\",\"project\":\"wsus\",\"project_owner\":\"hello@dld23.com\",\"region\":\"fr\"}"
+            "value": "{\"env\":\"dev\",\"project\":\"demo\",\"project_owner\":\"james@dld23.com\"}"
         },
         "vmNamePrefix": {
-            "value": "myvmprefix"
+            "value": "jdlddemo"
         },
         "NumberOfInstances": {
             "value": 1
         },
         "VmSize": {
-            "value": "Standard_E2_v3"
+            "value": "Standard_F4s_v2"
         },
         "sizeOfEachDataDiskInGB": {
-            "value": 256
+            "value": 4
         },
         "enableAcceleratedNetworking": {
-            "value": false
+            "value": true
         },
         "domainToJoin": {
-            "value": "mydomain.com"
+            "value": "indld23.com"
+        },
+        "ouPath": {
+            "value": "OU=AADDC Computers,DC=indld23,DC=com"
         },
         "existingDomainUPN": {
-            "value": "adm-account@mydomain.com"
-        },
-        "existingDomainPassword": {
-            "value": "Passw0rd!123"
+            "value": "james@dld23.com"
         },
         "existingVnetName": {
-            "value": "VnetName"
+            "value": "whp-corp-prd-wvd-vnet1"
         },
         "existingSubnetName": {
-            "value": "Subnet-1"
+            "value": "mgmt1"
         },
         "virtualNetworkResourceGroupName": {
-            "value": "RGName"
+            "value": "whp-corp-prd-wvd-rg1"
         },
         "location": {
             "value": "westeurope"

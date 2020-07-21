@@ -2,11 +2,11 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "tags": {
+        "additional_tags": {
             "type": "string",
-            "defaultValue": "{\"env\":\"prd\",\"project\":\"windows_virtual_desktop\",\"project_owner\":\"XXX@XXX\",\"region\":\"es\"}",
+            "defaultValue": "{}",
             "metadata": {
-                "description": "Tags to apply on the Windows Virtual Desktop resources."
+                "description": "Tags to apply on the Windows Virtual Desktop resources, like : {\"env\":\"prd\",\"project\":\"windows_virtual_desktop\",\"project_owner\":\"XXX@XXX\",\"region\":\"es\"}."
             }
         },
         "ImageSource": {
@@ -65,6 +65,13 @@
                 "description": "Number of Virtual Machines to create."
             }
         },
+        "NumberOfDataDisks": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "Number of Virtual Machines Data Disks to create."
+            }
+        },
         "VMDiskType": {
             "type": "string",
             "allowedValues": [
@@ -89,7 +96,7 @@
             "metadata": {
                 "description": "Size of each data disk in GB"
             },
-            "defaultValue": 64
+            "defaultValue": 32
         },
         "VmSize": {
             "type": "string",
@@ -118,6 +125,13 @@
                 "description": "Warning: Parameter 'UseManagedDisks' will not be allowed to be false, starting March 1st, 2020. (Required when UseManagedDisks = False) The resource group containing the storage account of the image vhd file."
             },
             "defaultValue": ""
+        },
+        "dnsServers": {
+            "type": "array",
+            "metadata": {
+                "description": "Use it if you want different DNS that the ones inherited from the vNet."
+            },
+            "defaultValue": []
         },
         "domainToJoin": {
             "type": "string",
@@ -171,7 +185,7 @@
         }
     },
     "variables": {
-        "tagsbase64": "[base64(parameters('tags'))]",
+        "additional_tags": "[base64ToJson(base64(parameters('additional_tags')))]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "VmNamesOutput": {
@@ -241,47 +255,9 @@
     ],
     "resources": [
         {
-            "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "2019-08-01",
-            "name": "[concat(parameters('vmNamePrefix'), '-nsg')]",
-            "location": "[parameters('location')]",
-            "properties": {
-                "securityRules": [
-                    {
-                        "name": "allow-wsus-in-net",
-                        "properties": {
-                            "priority": 1000,
-                            "access": "Allow",
-                            "direction": "Inbound",
-                            "destinationPortRanges": [
-                                "10443"
-                            ],
-                            "protocol": "Tcp",
-                            "sourcePortRange": "*",
-                            "sourceAddressPrefix": "Internet",
-                            "destinationAddressPrefix": "*"
-                        }
-                    },
-                    {
-                        "name": "deny-net",
-                        "properties": {
-                            "priority": 2000,
-                            "access": "Deny",
-                            "direction": "Inbound",
-                            "destinationPortRange": "*",
-                            "protocol": "*",
-                            "sourcePortRange": "*",
-                            "sourceAddressPrefix": "Internet",
-                            "destinationAddressPrefix": "*"
-                        }
-                    }
-                ]
-            }
-        },
-        {
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/availabilitySets",
-            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "tags": "[union(variables('additional_tags'),resourceGroup().tags)]",
             "name": "[concat(parameters('vmNamePrefix'), '-aset')]",
             "location": "[parameters('location')]",
             "properties": {
@@ -315,21 +291,20 @@
         {
             "apiVersion": "2018-11-01",
             "type": "Microsoft.Network/networkInterfaces",
-            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "tags": "[union(variables('additional_tags'),resourceGroup().tags)]",
             "name": "[concat(parameters('vmNamePrefix'), add(copyIndex(),1), '-nic')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/', parameters('vmNamePrefix'), '-aset')]",
-                "[concat('Microsoft.Network/networkSecurityGroups/', concat(parameters('vmNamePrefix'), '-nsg'))]"
+                "[concat('Microsoft.Compute/availabilitySets/', parameters('vmNamePrefix'), '-aset')]"
             ],
             "copy": {
                 "name": "rdsh-nic-loop",
                 "count": "[parameters('NumberOfInstances')]"
             },
             "properties": {
-                "networkSecurityGroup": {
-                    "id": "[resourceId ('Microsoft.Network/networkSecurityGroups/', concat(parameters('vmNamePrefix'), '-nsg'))]"
-                },
+                // "networkSecurityGroup": {
+                //     "id": "[resourceId ('Microsoft.Network/networkSecurityGroups/', concat(parameters('vmNamePrefix'), '-nsg'))]"
+                // },
                 "ipConfigurations": [
                     {
                         "name": "ipconfig",
@@ -341,6 +316,9 @@
                         }
                     }
                 ],
+                "dnsSettings": {
+                    "dnsServers": "[parameters('dnsServers')]"
+                },
                 "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]"
             }
         },
@@ -348,7 +326,7 @@
             "condition": "[variables('ManagedDisks')]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines",
-            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "tags": "[union(variables('additional_tags'),resourceGroup().tags)]",
             "name": "[concat(if(variables('ManagedDisks'), '', 'null'), parameters('vmNamePrefix'), add(copyIndex(),1))]",
             "location": "[parameters('location')]",
             "copy": {
@@ -410,7 +388,7 @@
             "condition": "[not(variables('ManagedDisks'))]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines",
-            "tags": "[base64ToJson(variables('tagsbase64'))]",
+            "tags": "[union(variables('additional_tags'),resourceGroup().tags)]",
             "name": "[concat(if(variables('ManagedDisks'), 'null', ''), parameters('vmNamePrefix'), add(copyIndex(),1))]",
             "location": "[parameters('location')]",
             "copy": {
