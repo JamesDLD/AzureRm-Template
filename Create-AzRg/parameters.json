@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "productName": {
+            "value": "dns"
+        },
+        "context": {
+            "value": "infra"
+        },
+        "envs": {
+            "value": [
+                "dev",
+                "int"
+            ]
+        },
+        "tags": {
+            "value": "{\"env\":\"dev\",\"project\":\"demo\",\"project_owner\":\"james@dld23.com\"}"
+        }
+    }
+}

@@ -22,6 +22,7 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 | Create an Azure Private Endpoint | [privateEndpoints](Create-AzPrivateEnpoints) |
 | NEED TO BE UPTADED FOR SPRING UPDATE 2020 <br> * Diagnostic settings of a Windows Virtual Desktop Workspace to a Log Analytics workspace | [diagnosticSettings](Deploy-WvdWorkspaceDiagnostics) |
 | Create a VM, with NSG on an existing Vnet/Subnet | [Microsoft.Compute/virtualMachines](Create-AzVm) |
+| Create Resource Group | [Microsoft.Resources/resourceGroups](Create-AzRg) |
 
 # Azure Policy
 

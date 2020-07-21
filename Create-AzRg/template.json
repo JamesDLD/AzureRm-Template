@@ -1,0 +1,69 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "productName": {
+            "type": "string",
+            "metadata": {
+                "description": "Product Name."
+            }
+        },
+        "context": {
+            "type": "string",
+            "allowedValues": [
+                "app",
+                "infra"
+            ],
+            "metadata": {
+                "description": "Context."
+            }
+        },
+        "envs": {
+            "type": "array",
+            "metadata": {
+                "description": "Environment list within the same subscription."
+            }
+        },
+        "rgLocation": {
+            "type": "string",
+            "defaultValue": "francecentral",
+            "metadata": {
+                "description": "Location. Overwrite this value if you don't want to respect the golden rule."
+            }
+        },
+        "tags": {
+            "type": "string",
+            "defaultValue": "{}",
+            "metadata": {
+                "description": "Optional Tags to apply on the resource group, sample value : like : {\"env\":\"sdbx\",\"project\":\"demo\",\"project_owner\":\"XXX@XXX\"}."
+            }
+        }
+    },
+    "functions": [],
+    "variables": {
+        "tags": "[base64ToJson(base64(parameters('tags')))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2019-10-01",
+            "copy": {
+                "name": "rg_copy",
+                "count": "[length(parameters('envs'))]"
+            },
+            "name": "[concat('rg-',parameters('context'),'-',parameters('envs')[copyIndex('rg_copy')],'-',parameters('productName'),'-001')]",
+            "location": "[parameters('rgLocation')]",
+            "tags": "[variables('tags')]",
+            "properties": {}
+        }
+    ],
+    "outputs": {
+        "resourceIDs": {
+            "type": "array",
+            "copy": {
+                "count": "[length(parameters('envs'))]",
+                "input": "[resourceId('Microsoft.Resources/resourceGroups', concat('rg-',parameters('context'),'-',parameters('envs')[copyIndex()],'-',parameters('productName'),'-001'))]"
+            }
+        }
+    }
+}
