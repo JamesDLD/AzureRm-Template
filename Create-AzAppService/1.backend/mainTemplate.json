@@ -1,0 +1,73 @@
+{
+    //Based on the following public ARM Template : https://github.com/Azure/azure-quickstart-templates/tree/master/101-cosmosdb-sql
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "env": {
+            "type": "string",
+            "allowedValues": [
+                "prd",
+                "dev"
+            ],
+            "metadata": {
+                "description": "Webhelp environment for the GWWS Application."
+            }
+        },
+        "appAcronym": {
+            "type": "string",
+            "metadata": {
+                "description": "Accronym of the Application."
+            }
+        },
+        "additional_tags": {
+            "type": "string",
+            //"defaultValue": "{\"AppProfile\": \"Wordpress\"}",
+            "defaultValue": "{}",
+            "metadata": {
+                "description": "Option Tags to apply on the resources in addition to it's Resource group tags"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for resources."
+            }
+        },
+        "applicationInsightsName": {
+            "type": "string",
+            "defaultValue": "[concat('app-',parameters('env'),'-',parameters('appAcronym'),'-appins1')]",
+            "metadata": {
+                "description": "Use it to overwrite the naming convention."
+            }
+        }
+    },
+    "variables": {
+        "additional_tags": "[base64ToJson(base64(parameters('additional_tags')))]",
+        "appInsightsResourceId": "[resourceId('Microsoft.Insights/components', parameters('applicationInsightsName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Insights/components",
+            "apiVersion": "2018-05-01-preview",
+            "location": "[parameters('location')]",
+            "name": "[parameters('applicationInsightsName')]",
+            "tags": "[union(variables('additional_tags'),resourceGroup().tags)]",
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web",
+                "ApplicationId": "[parameters('applicationInsightsName')]"
+            }
+        }
+    ],
+    "outputs": {
+        "appinsightS_INSTRUMENTATIONKEY": {
+            "value": "[reference(variables('appInsightsResourceId'), '2018-05-01-preview').instrumentationKey]",
+            "type": "string"
+        },
+        "applicationinsightS_CONNECTION_STRING": {
+            "value": "[concat('InstrumentationKey=', reference(variables('appInsightsResourceId'), '2018-05-01-preview').instrumentationKey)]",
+            "type": "string"
+        }
+    }
+}

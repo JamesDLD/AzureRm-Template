@@ -1,0 +1,138 @@
+{
+    //Based on the following public ARM Template : https://github.com/Azure/azure-quickstart-templates/tree/master/101-cosmosdb-sql
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "env": {
+            "type": "string",
+            "allowedValues": [
+                "prd",
+                "dev"
+            ],
+            "metadata": {
+                "description": "Webhelp environment for the GWWS Application."
+            }
+        },
+        "infraEnv": {
+            "type": "string",
+            "defaultValue": "[if(equals(parameters('env'), 'prd'), 'prd', 'noprd')]",
+            "allowedValues": [
+                "prd",
+                "noprd"
+            ],
+            "metadata": {
+                "description": "Infrastructure environment."
+            }
+        },
+        "additional_tags": {
+            "type": "string",
+            //"defaultValue": "{\"AppProfile\": \"Wordpress\"}",
+            "defaultValue": "{}",
+            "metadata": {
+                "description": "Option Tags to apply on the resources in addition to it's Resource group tags"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for resources."
+            }
+        },
+        "servicePlanName": {
+            "type": "string",
+            "defaultValue": "[concat('mvp-',parameters('infraEnv'),'-shhp-apphostp1')]",
+            "metadata": {
+                "description": "Use it to overwrite the naming convention."
+            }
+        },
+        "acrName": {
+            "type": "string",
+            "defaultValue": "[concat('mvpjdld',parameters('infraEnv'),'cr1')]",
+            "metadata": {
+                "description": "Docker Container Registry name."
+            }
+        },
+        "acrAdminUserEnabled": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Enable admin user that have push / pull permission to the registry."
+            }
+        },
+        "acrSku": {
+            "type": "string",
+            "metadata": {
+                "description": "Tier of your Azure Container Registry."
+            },
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Basic",
+                "Standard",
+                "Premium"
+            ]
+        }
+    },
+    "variables": {
+        "additional_tags": "[base64ToJson(base64(parameters('additional_tags')))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "name": "[parameters('servicePlanName')]",
+            "location": "[parameters('location')]",
+            "tags": "[union(variables('additional_tags'),resourceGroup().tags)]",
+            "sku": {
+                "name": "P1v2",
+                "tier": "PremiumV2",
+                "size": "P1v2",
+                "family": "Pv2",
+                "capacity": 1
+            },
+            "kind": "app",
+            "properties": {
+                "perSiteScaling": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": false,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+        },
+        {
+            "name": "[parameters('acrName')]",
+            "type": "Microsoft.ContainerRegistry/registries",
+            "apiVersion": "2019-12-01-preview",
+            "location": "[parameters('location')]",
+            "comments": "Container registry for storing docker images",
+            "tags": {
+                "displayName": "Container Registry",
+                "container.registry": "[parameters('acrName')]"
+            },
+            "sku": {
+                "name": "[parameters('acrSku')]",
+                "tier": "[parameters('acrSku')]"
+            },
+            "properties": {
+                "adminUserEnabled": "[parameters('acrAdminUserEnabled')]"
+            }
+        }
+    ],
+    "outputs": {
+        "hostPlanID": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlanName'))]"
+        },
+        "acrId": {
+            "value": "[resourceId('Microsoft.ContainerRegistry/registries',parameters('acrName'))]",
+            "type": "string"
+        },
+        "acrLoginServer": {
+            "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries',parameters('acrName')),'2019-12-01-preview').loginServer]",
+            "type": "string"
+        }
+    }
+}

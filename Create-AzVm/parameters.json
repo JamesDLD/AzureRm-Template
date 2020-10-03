@@ -30,13 +30,13 @@
             "value": "james@dld23.com"
         },
         "existingVnetName": {
-            "value": "whp-corp-prd-wvd-vnet1"
+            "value": "corp-prd-wvd-vnet1"
         },
         "existingSubnetName": {
             "value": "mgmt1"
         },
         "virtualNetworkResourceGroupName": {
-            "value": "whp-corp-prd-wvd-rg1"
+            "value": "corp-prd-wvd-rg1"
         },
         "location": {
             "value": "westeurope"
