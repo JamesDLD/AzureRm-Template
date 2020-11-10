@@ -11,6 +11,16 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 | Network Topologies for Azure Private Endpoints | [Medium article](https://medium.com/faun/network-topologies-for-azure-private-endpoints-ed7c968b0acd) |
 
 
+
+
+# Azure Monitor Workbook
+
+| Description  | Link |
+| ------------- | ------------- |
+| Create a [Azure Monitor Workbook](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/workbooks-overview?WT.mc_id=AZ-MVP-5003548) | [workbooks](Create-AzWorkbookNetwork) |
+
+
+
 # Azure Depoyment Template
 
 | Description  | Link |
@@ -24,6 +34,7 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 | Create a VM, with NSG on an existing Vnet/Subnet | [Microsoft.Compute/virtualMachines](Create-AzVm) |
 | Create Resource Group | [Microsoft.Resources/resourceGroups](Create-AzRg) |
 | Create an  App Service plan, an App Service and its Private Endpoint | [Microsoft.Web/sites](Create-AzAppService) |
+
 
 # Azure Policy
 
