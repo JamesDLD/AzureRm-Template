@@ -26,7 +26,7 @@ Deployment through the PowerShell
 # Variables
 $AzureRmSubscriptionName = "mvp-sub1"
 $RgName = "infr-hub-prd-rg1"
-$workbookDisplayName = "Network Debug2" #"Azure Inventory" #"NetworkDebug"
+$workbookDisplayName = "Network Debug"
 $workbookSourceId = "Azure Monitor"
 $workbookType = "workbook"
 $templateUri = "https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzWorkbookNetwork/template.json"

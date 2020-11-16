@@ -251,7 +251,7 @@
                 "queryType": 1,
                 "resourceType": "microsoft.resourcegraph/resources"
             },
-            "name": "parameters - 0"
+            "name": "Core parameters"
         },
         {
             "type": 3,
@@ -428,7 +428,7 @@
                 },
                 "sortBy": []
             },
-            "name": "query - 3",
+            "name": "Filter from source Ip",
             "styleSettings": {
                 "showBorder": true
             }
@@ -477,17 +477,18 @@
                             }
                         }
                     ],
-                    "rowLimit": 100
+                    "rowLimit": 100,
+                    "filter": true
                 }
             },
-            "name": "query - 3 - Copy",
+            "name": "Filter from destination Ip",
             "styleSettings": {
                 "showBorder": true
             }
         }
     ],
     "fallbackResourceIds": [
-        "Azure Monitor"
+        "azure monitor"
     ],
     "fromTemplateId": "community-Workbooks/Azure Monitor - Getting Started/Resource Picker",
     "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
