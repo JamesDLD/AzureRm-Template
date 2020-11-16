@@ -24,11 +24,13 @@ Deployment through the PowerShell
 
 ```ps
 # Variables
-$AzureRmSubscriptionName = "my-subsctiption-name"
-$RgName = "my-workbook-rg-name"
-$workbookDisplayName = "NetworkDebug"
+$AzureRmSubscriptionName = "mvp-sub1"
+$RgName = "infr-hub-prd-rg1"
+$workbookDisplayName = "Network Debug2" #"Azure Inventory" #"NetworkDebug"
 $workbookSourceId = "Azure Monitor"
 $workbookType = "workbook"
+$templateUri = "https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzWorkbookNetwork/template.json"
+$workbookSerializedData = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzWorkbookNetwork/galleryTemplate.json"
 
 ## Connectivity
 # Login first with Connect-AzAccount if not using Cloud Shell
@@ -36,12 +38,13 @@ $AzureRmContext = Get-AzSubscription -SubscriptionName $AzureRmSubscriptionName 
 Select-AzSubscription -Name $AzureRmSubscriptionName -Context $AzureRmContext -Force -ErrorAction Stop
 
 ## Action
-Write-Host "Deploying : $DeploymentName in the resource group : $RgName" -ForegroundColor Cyan
-New-AzResourceGroupDeployment -Name $workbookDisplayName -ResourceGroupName $RgName `
-  -TemplateUri https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzWorkbookNetwork/template.json `
+Write-Host "Deploying : $workbookType-$workbookDisplayName in the resource group : $RgName" -ForegroundColor Cyan
+New-AzResourceGroupDeployment -Name $(("$workbookType-$workbookDisplayName").replace(' ', '')) -ResourceGroupName $RgName `
+  -TemplateUri $TemplateUri `
   -workbookDisplayName $workbookDisplayName `
   -workbookType $workbookType `
   -workbookSourceId $workbookSourceId `
+  -workbookSerializedData ($workbookSerializedData | ConvertTo-Json -Depth 20) `
   -Confirm -ErrorAction Stop
 
 ```
