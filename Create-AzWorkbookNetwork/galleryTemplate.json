@@ -125,7 +125,7 @@
                         "type": 4,
                         "isRequired": true,
                         "value": {
-                            "durationMs": 300000
+                            "durationMs": 900000
                         },
                         "typeSettings": {
                             "selectableValues": [

@@ -1,0 +1,65 @@
+💡 [Work with strings in Azure Monitor log queries](https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/string-operations)
+💡 [Learn how to some custom requests](http://harvestingclouds.com/post/troubleshooting-azure-networking-checking-allowed-and-denied-traffic-in-network-security-groups-nsgs-via-log-analytics-queries/)
+💡 [Learn how to use this template](https://github.com/microsoft/Application-Insights-Workbooks/tree/master/Workbooks/Azure%20Monitor%20-%20Getting%20Started/Resource%20Picker)
+
+//mySourceIP  --> Source Ip to filter on
+//myDestinationIP --> Destination Ip to filter on
+
+//Filter deny from source Ip
+
+AzureNetworkAnalytics_CL 
+| where FlowStartTime_t {TimeRange} 
+| extend SourceIP=SrcIP_s
+| extend DestinationIP=DestIP_s
+| extend NSGRuleAction=split(NSGRules_s,'|',3)[0]
+| extend NSGRuleName=tostring(split(NSGRules_s,'|',1)[0])
+| extend NSGName=tostring(split(NSGList_s,'/',2)[0])
+| where NSGRuleAction == "D" 
+| where SourceIP has "{mySourceIP}" 
+| where Subscription1_g in~ ({Subscription:subid}) or Subscription2_g in~ ({Subscription:subid})
+| project SourceIP, DestinationIP, DestinationPort=DestPort_d, Protocol=L7Protocol_s, FlowStartTime_t, NSGRuleAction, NSGName, NSGRuleName, SourceSubnet=Subnet1_s, DestinationSubnet=Subnet2_s
+| sort by FlowStartTime_t desc
+
+
+AzureNetworkAnalytics_CL 
+| where FlowStartTime_t {TimeRange} 
+| extend SourceIP=SrcIP_s
+| extend DestinationIP=DestIP_s
+| extend NSGRuleAction=split(NSGRules_s,'|',3)[0]
+| extend NSGRuleName=tostring(split(NSGRules_s,'|',1)[0])
+| extend NSGName=tostring(split(NSGList_s,'/',2)[0])
+| where NSGRuleAction == "D" 
+| where SourceIP has "{mySourceIP}" 
+| project SourceIP, DestinationIP, DestinationPort=DestPort_d, Protocol=L7Protocol_s, FlowStartTime_t, NSGName, NSGRuleName, SourceSubnet=Subnet1_s, DestinationSubnet=Subnet2_s
+| sort by FlowStartTime_t desc
+//| where Subscription1_g in~ ({Subscription:subid}) or Subscription2_g in~ ({Subscription:subid})
+
+
+
+
+AzureNetworkAnalytics_CL 
+| where FlowStartTime_t {TimeRange} 
+| extend SourceIP=SrcIP_s
+| extend DestinationIP=DestIP_s
+| extend NSGRuleAction=split(NSGRules_s,'|',3)[0]
+| extend NSGRuleName=tostring(split(NSGRules_s,'|',1)[0])
+| extend NSGName=tostring(split(NSGList_s,'/',2)[0])
+| where NSGRuleAction == "D" 
+| where SourceIP has "{mySourceIP}" 
+| where Subscription1_g in~ ({Subscription:subid}) or Subscription2_g in~ ({Subscription:subid})
+| project SourceIP, DestinationIP, DestinationPort=DestPort_d, Protocol=L7Protocol_s, FlowStartTime_t, NSGName, NSGRuleName, SourceSubnet=Subnet1_s, DestinationSubnet=Subnet2_s, NSGRuleAction
+| sort by FlowStartTime_t desc
+
+
+AzureNetworkAnalytics_CL 
+| where FlowStartTime_t {TimeRange} 
+| extend SourceIP=SrcIP_s
+| extend DestinationIP=DestIP_s
+| extend NSGRuleAction=split(NSGRules_s,'|',3)[0]
+| extend NSGRuleName=tostring(split(NSGRules_s,'|',1)[0])
+| extend NSGName=tostring(split(NSGList_s,'/',2)[0])
+| where NSGRuleAction == "D" 
+| where DestinationIP has "{myTargetIP}"
+| where Subscription1_g in~ ({Subscription:subid}) or Subscription2_g in~ ({Subscription:subid})
+| project SourceIP, DestinationIP, DestinationPort=DestPort_d, Protocol=L7Protocol_s, FlowStartTime_t, NSGName, NSGRuleName, SourceSubnet=Subnet1_s, DestinationSubnet=Subnet2_s, NSGRuleAction
+| sort by FlowStartTime_t desc
