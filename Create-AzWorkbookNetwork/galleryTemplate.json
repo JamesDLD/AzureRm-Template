@@ -4,7 +4,7 @@
         {
             "type": 1,
             "content": {
-                "json": "# Network Debug Workbook\n## Content\nThis workbook gives Insights from your Network Security Group [(NSG) flow logs](https://docs.microsoft.com/en-us/azure/network-watcher/network-watcher-nsg-flow-logging-overview?WT.mc_id=AZ-MVP-5003548) that are sent to your Log Analytics workspaces among any Subscriptions that you have acces within your Azure AD Tenant.\n\n## Reference articles\n💡 [Enable NSG Flow logs with Traffic Analytics](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics?WT.mc_id=AZ-MVP-5003548)\n\n💡 [Schema and data aggregation in Traffic Analytics](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics-schema?WT.mc_id=AZ-MVP-5003548)\n\n💡 [Learn how to pick a set of resources to analyze in workbooks](https://github.com/microsoft/Application-Insights-Workbooks/tree/master/Workbooks/Azure%20Monitor%20-%20Getting%20Started/Resource%20Picker?WT.mc_id=AZ-MVP-5003548)\n\n💡 [Sample queries](http://harvestingclouds.com/post/troubleshooting-azure-networking-checking-allowed-and-denied-traffic-in-network-security-groups-nsgs-via-log-analytics-queries/?WT.mc_id=AZ-MVP-5003548)"
+                "json": "# Network Debug Workbook\n## Content\nThis workbook gives Insights from your Network Security Group [(NSG) flow logs](https://docs.microsoft.com/en-us/azure/network-watcher/network-watcher-nsg-flow-logging-overview?WT.mc_id=AZ-MVP-5003548) that are sent to your Log Analytics workspaces among any Subscriptions that you have acces within your Azure AD Tenant.\n\n## Reference articles\n💡 [Enable NSG Flow logs with Traffic Analytics](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics?WT.mc_id=AZ-MVP-5003548)\n\n💡 [Schema and data aggregation in Traffic Analytics](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics-schema?WT.mc_id=AZ-MVP-5003548)\n\n💡 [Learn how to pick a set of resources to analyze in workbooks](https://github.com/microsoft/Application-Insights-Workbooks/tree/master/Workbooks/Azure%20Monitor%20-%20Getting%20Started/Resource%20Picker?WT.mc_id=AZ-MVP-5003548)\n\n💡 [Sample queries](http://harvestingclouds.com/post/troubleshooting-azure-networking-checking-allowed-and-denied-traffic-in-network-security-groups-nsgs-via-log-analytics-queries/?WT.mc_id=AZ-MVP-5003548)\n\n💡 Malicious flow tracking contains the source [country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)"
             },
             "name": "Help message",
             "styleSettings": {
@@ -397,6 +397,71 @@
                 ]
             },
             "name": "Flow Type"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "AzureNetworkAnalytics_CL \n| where FlowStartTime_t {TimeRange} \n| extend SourceIP=SrcIP_s\n| extend DestinationIP=DestIP_s\n| extend NSGRuleAction =tostring(split(NSGRules_s,'|',3)[0])\n| extend NSGRuleName=tostring(split(NSGRules_s,'|',1)[0])\n| extend NSGName=tostring(split(NSGList_s,'/',2)[0])\n| where \"{action}\" has NSGRuleAction\n| where Subscription1_g in~ ({Subscription:subid}) or Subscription2_g in~ ({Subscription:subid})\n| where FlowType_s == \"MaliciousFlow\"\n| project FlowIntervalStartTime_t, FlowIntervalEndTime_t,Country_s,SourceIP, DestinationIP, DestinationPort=DestPort_d, VM_s, Protocol=L7Protocol_s, [\"RuleAction\"]=NSGRuleAction, FlowStartTime_t, NSGName, NSGRuleName, DestinationSubnet=Subnet2_s\n| sort by FlowStartTime_t desc",
+                "size": 0,
+                "showAnalytics": true,
+                "title": "Malicious Flow",
+                "showExportToExcel": true,
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                    "{logWorkspaceWithFlowLogs}"
+                ],
+                "gridSettings": {
+                    "formatters": [
+                        {
+                            "columnMatch": "RuleAction",
+                            "formatter": 18,
+                            "formatOptions": {
+                                "thresholdsOptions": "icons",
+                                "thresholdsGrid": [
+                                    {
+                                        "operator": "==",
+                                        "thresholdValue": "D",
+                                        "representation": "disabled",
+                                        "text": "Deny"
+                                    },
+                                    {
+                                        "operator": "==",
+                                        "thresholdValue": "A",
+                                        "representation": "2",
+                                        "text": "Allow"
+                                    },
+                                    {
+                                        "operator": "Default",
+                                        "thresholdValue": null,
+                                        "representation": "question",
+                                        "text": "{0}{1}"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "rowLimit": 100,
+                    "filter": true,
+                    "sortBy": [
+                        {
+                            "itemKey": "Country_s",
+                            "sortOrder": 1
+                        }
+                    ]
+                },
+                "sortBy": [
+                    {
+                        "itemKey": "Country_s",
+                        "sortOrder": 1
+                    }
+                ]
+            },
+            "name": "Flow Type - Malicious Flow",
+            "styleSettings": {
+                "showBorder": true
+            }
         },
         {
             "type": 3,
