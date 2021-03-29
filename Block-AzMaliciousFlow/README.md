@@ -7,7 +7,7 @@ Content of this template is explained in the following article [Automation to bl
 
 With Azure [Traffic Analytics](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics?WT.mc_id=AZ-MVP-5003548) on Network Security Groups (NSG) we can visualize precious insights like allowed and denied flows per flow type.
 
-This template will create resources to block [Malicious|https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics-schema?WT.mc_id=AZ-MVP-5003548&WT.mc_id=AZ-MVP-5003548#notes] flows type that are allowed on our NSG and we will automatically block them with a Network Security Group rule.
+This template will create resources to block [Malicious](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics-schema?WT.mc_id=AZ-MVP-5003548&WT.mc_id=AZ-MVP-5003548#notes) flows type that are allowed on our NSG and we will automatically block them with a Network Security Group rule.
 
 
 Deployment through the Portal
