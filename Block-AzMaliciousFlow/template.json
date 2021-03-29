@@ -429,7 +429,7 @@
                                                 "body": {
                                                     "Body": "<p>@{variables('emailBody')}</p>",
                                                     "Importance": "High",
-                                                    "Subject": "DDL - Malicious flows blocked - Detected by NSG Traffic Analytics - Blocked by Logic App",
+                                                    "Subject": "Malicious flows blocked - Detected by NSG Traffic Analytics - Blocked by Logic App",
                                                     "To": "@parameters('complianceEmailAddress')"
                                                 },
                                                 "host": {
