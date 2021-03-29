@@ -5,9 +5,8 @@
         "logAnalytics": {
             "type": "String",
             "metadata": {
-                "displayName": "Log Analytics workspace where you send Traffic Analytics logs.",
-                "description": "Select Log Analytics workspace from dropdown list",
-                "strongType": "omsWorkspace"
+                "displayName": "Log Analytics workspace ID where you send Traffic Analytics logs",
+                "description": "Log Analytics workspace ID where you send Traffic Analytics logs"
             }
         },
         "logicAppName": {

@@ -6,6 +6,7 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 
 | Description  | Link |
 | ------------- | ------------- |
+| Automation to block malicious flows detected by Azure Traffic Analytics | [Medium article](https://medium.com/@jamesdld23/automation-to-block-malicious-flows-detected-by-azure-traffic-analytics-b010298ba347) |
 | A User-defined function in Azure Resource Manager template | [json template](User-Defined-Function-Demo) <br> [Medium article](https://medium.com/faun/a-user-defined-function-in-azure-resource-manager-template-dbba3d834c8b)|
 | Diagnostic Settings for Azure Windows Virtual Desktop resources | Medium articles, see [Part 1](https://medium.com/faun/diagnostic-settings-for-azure-windows-virtual-desktop-resources-part-1-534308e9fff0) and [Part 2 with an Initiative Policy](https://medium.com/faun/diagnostic-settings-for-azure-windows-virtual-desktop-resources-part-2-4bfb9ce8d1be) |
 | Network Topologies for Azure Private Endpoints | [Medium article](https://medium.com/faun/network-topologies-for-azure-private-endpoints-ed7c968b0acd) |
@@ -25,6 +26,7 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 
 | Description  | Link |
 | ------------- | ------------- |
+| Automation to block malicious flows detected by Azure Traffic Analytics | [Microsoft.Logic/workflows](Block-AzMaliciousFlow) |
 | Create a Standard Public Load Balancer with outbound rules | [loadBalancers](Create-AzureRmLoadBalancerOutboundRules) |
 | Create a Palo Alto VM-Series Firewall with <br> * Availability Zones  <br> * Managed Disks  <br> * Accelerated Networking <br> * Boot Diagnostics | [virtualMachines](Create-AzureRmPaloAltoAz) |
 | Create an Azure Bastion host | [bastionHosts](Create-AzBastion) |
