@@ -125,7 +125,7 @@
                         "type": 4,
                         "isRequired": true,
                         "value": {
-                            "durationMs": 86400000
+                            "durationMs": 259200000
                         },
                         "typeSettings": {
                             "selectableValues": [
@@ -225,7 +225,6 @@
                         "delimiter": ",",
                         "query": "{\"version\":\"1.0.0\",\"content\":\"[{\\\"value\\\":\\\"A\\\",\\\"label\\\": \\\"Allow\\\"},{\\\"value\\\":\\\"D\\\",\\\"label\\\": \\\"Deny\\\"}]\",\"transformers\":null}",
                         "value": [
-                            "D",
                             "A"
                         ],
                         "typeSettings": {
@@ -397,6 +396,72 @@
                 ]
             },
             "name": "Flow Type"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "AzureNetworkAnalytics_CL \n| where FlowStartTime_t {TimeRange} \n| extend SourceIP=SrcIP_s\n| extend DestinationIP=DestIP_s\n| extend NSGRuleAction =tostring(split(NSGRules_s,'|',3)[0])\n| extend NSGRuleName=tostring(split(NSGRules_s,'|',1)[0])\n| extend NSGName=tostring(split(NSGList_s,'/',2)[0])\n| where \"{action}\" has NSGRuleAction\n| where Subscription1_g in~ ({Subscription:subid}) or Subscription2_g in~ ({Subscription:subid})\n| where FlowType_s == \"MaliciousFlow\"\n| project FlowIntervalStartTime_t, FlowIntervalEndTime_t,Country_s,SourceIP, DestinationIP, DestinationPort=DestPort_d, VM_s, Protocol=L7Protocol_s, [\"RuleAction\"]=NSGRuleAction, FlowStartTime_t, NSGName, NSGRuleName, DestinationSubnet=Subnet2_s\n| sort by FlowStartTime_t desc\n| summarize count() by bin(FlowStartTime_t, 2h) , Country_s",
+                "size": 0,
+                "showAnalytics": true,
+                "title": "Allowed Malicious Flow - Chart",
+                "showExportToExcel": true,
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                    "{logWorkspaceWithFlowLogs}"
+                ],
+                "visualization": "unstackedbar",
+                "gridSettings": {
+                    "formatters": [
+                        {
+                            "columnMatch": "RuleAction",
+                            "formatter": 18,
+                            "formatOptions": {
+                                "thresholdsOptions": "icons",
+                                "thresholdsGrid": [
+                                    {
+                                        "operator": "==",
+                                        "thresholdValue": "D",
+                                        "representation": "disabled",
+                                        "text": "Deny"
+                                    },
+                                    {
+                                        "operator": "==",
+                                        "thresholdValue": "A",
+                                        "representation": "2",
+                                        "text": "Allow"
+                                    },
+                                    {
+                                        "operator": "Default",
+                                        "thresholdValue": null,
+                                        "representation": "question",
+                                        "text": "{0}{1}"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "rowLimit": 100,
+                    "filter": true,
+                    "sortBy": [
+                        {
+                            "itemKey": "Country_s",
+                            "sortOrder": 1
+                        }
+                    ]
+                },
+                "sortBy": [
+                    {
+                        "itemKey": "Country_s",
+                        "sortOrder": 1
+                    }
+                ]
+            },
+            "name": "Flow Type - Allowed Malicious Flow - Chart",
+            "styleSettings": {
+                "showBorder": true
+            }
         },
         {
             "type": 3,
