@@ -163,6 +163,10 @@
             "kind": "V1",
             "properties": {
                 "displayName": "Get Azure Log Analytics Workspace Logs",
+                "parameterValues": {
+                    "username": "[reference(parameters('logAnalytics'), '2015-03-20').customerId]",
+                    "password": "[listKeys(parameters('logAnalytics'), providers('Microsoft.OperationalInsights', 'workspaces').apiVersions[0]).primarySharedKey]"
+                },
                 "customParameterValues": {},
                 "api": {
                     "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureloganalyticsdatacollector')]"
@@ -339,7 +343,7 @@
                                 "body": "AzureNetworkAnalytics_CL \n| where TimeGenerated >= todatetime(\"@{triggerBody()?['data']?['alertContext']?['condition']?['windowStartTime']}\") - 10m\n| extend SourceIP=SrcIP_s\n| extend DestinationIP=DestIP_s\n| extend SubscriptionId=tostring(split(NSGList_s, '/', 0)[0])\n| extend NSGRuleAction = FlowStatus_s\n| extend NSGRuleName = NSGRule_s\n| extend NSGName=tostring(split(NSGList_s, '/', 2)[0])\n| extend NSGRgName=tostring(split(NSGList_s, '/', 1)[0])\n| extend VMRgName = tostring(split(VM_s, '/', 0)[0])\n| extend VMName = tostring(split(VM_s, '/', 1)[0])\n| where \"'A'\" has NSGRuleAction\n| where FlowType_s == \"MaliciousFlow\"\n| project TimeGenerated, TimeProcessed_t, FlowStartTime_t, FlowEndTime_t, FlowIntervalStartTime_t, FlowIntervalEndTime_t, SubscriptionId, VMRgName, VMName, NSGRgName, NSGName, NSGRuleName, Country_s, SourceIP, DestinationIP, DestinationPort=DestPort_d, VM_s, Protocol=L7Protocol_s, [\"RuleAction\"]=NSGRuleAction, DestinationSubnet=Subnet2_s\n| sort by TimeGenerated asc \n| take @{first(triggerBody()?['data']?['alertContext']?['condition']?['allOf'])?['metricValue']}",
                                 "host": {
                                     "connection": {
-                                        "name": "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                        "name": "@parameters('$connections')['azureloganalyticsdatacollector']['connectionId']"
                                     }
                                 },
                                 "method": "post",
@@ -637,7 +641,7 @@
                             "azureloganalyticsdatacollector": {
                                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('azureLoganalyticsDataCollectorName'))]",
                                 "connectionName": "azureloganalyticsdatacollector",
-                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/azureloganalyticsdatacollector')]"
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureloganalyticsdatacollector')]"
                             }
                         }
                     },
