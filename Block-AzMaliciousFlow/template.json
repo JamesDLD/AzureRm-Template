@@ -186,21 +186,341 @@
                 "state": "Enabled",
                 "definition": {
                     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "actions": {
+                        "For_each_Malicious_flows": {
+                            "actions": {
+                                "Filter_Inbound_NSG_rules": {
+                                    "inputs": {
+                                        "from": "@body('HTTP_-_Get_NSG_rules')?['value']",
+                                        "where": "@equals(item()?['properties']?['direction'], 'Inbound')"
+                                    },
+                                    "runAfter": {
+                                        "HTTP_-_Get_NSG_rules": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Query"
+                                },
+                                "For_each_Inbound_NSG_rules": {
+                                    "actions": {
+                                        "Condition_-_Checking_if_rule_priority_is_available": {
+                                            "actions": {
+                                                "Increment_NSG_rule_priority": {
+                                                    "inputs": {
+                                                        "name": "rulePriority"
+                                                    },
+                                                    "runAfter": {},
+                                                    "type": "IncrementVariable"
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@item()?['properties']?['priority']",
+                                                            "@variables('rulePriority')"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "runAfter": {},
+                                            "type": "If"
+                                        }
+                                    },
+                                    "foreach": "@body('Filter_Inbound_NSG_rules')",
+                                    "runAfter": {
+                                        "Reset_NSG_rule_priority": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach"
+                                },
+                                "HTTP_-_Create_NSG_Rule": {
+                                    "inputs": {
+                                        "authentication": {
+                                            "type": "ManagedServiceIdentity"
+                                        },
+                                        "body": {
+                                            "properties": {
+                                                "access": "Deny",
+                                                "destinationAddressPrefix": "@{items('For_each_Malicious_flows')['DestinationIP']}",
+                                                "destinationPortRange": "*",
+                                                "direction": "Inbound",
+                                                "priority": "@variables('rulePriority')",
+                                                "protocol": "*",
+                                                "sourceAddressPrefix": "@{items('For_each_Malicious_flows')['SourceIP']}",
+                                                "sourcePortRange": "*"
+                                            }
+                                        },
+                                        "method": "PUT",
+                                        "uri": "https://management.azure.com/subscriptions/@{items('For_each_Malicious_flows')['SubscriptionId']}/resourceGroups/@{items('For_each_Malicious_flows')['NSGRgName']}/providers/Microsoft.Network/networkSecurityGroups/@{items('For_each_Malicious_flows')['NSGName']}/securityRules/BlockMaliciousFlow-@{variables('rulePriority')}?api-version=2020-05-01"
+                                    },
+                                    "runAfter": {
+                                        "For_each_Inbound_NSG_rules": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Http"
+                                },
+                                "HTTP_-_Get_NSG_rules": {
+                                    "inputs": {
+                                        "authentication": {
+                                            "type": "ManagedServiceIdentity"
+                                        },
+                                        "method": "GET",
+                                        "uri": "https://management.azure.com/subscriptions/@{items('For_each_Malicious_flows')['SubscriptionId']}/resourceGroups/@{items('For_each_Malicious_flows')['NSGRgName']}/providers/Microsoft.Network/networkSecurityGroups/@{items('For_each_Malicious_flows')['NSGName']}/securityRules?api-version=2020-05-01"
+                                    },
+                                    "runAfter": {},
+                                    "type": "Http"
+                                },
+                                "Reset_NSG_rule_priority": {
+                                    "inputs": {
+                                        "name": "rulePriority",
+                                        "value": 100
+                                    },
+                                    "runAfter": {
+                                        "Filter_Inbound_NSG_rules": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable"
+                                },
+                                "Send_an_email_(V2)": {
+                                    "inputs": {
+                                        "body": {
+                                            "Body": "<p>@{variables('emailBody')}</p>",
+                                            "Importance": "High",
+                                            "Subject": "DDL - Malicious flows blocked - Detected by NSG Traffic Analytics - Blocked by Logic App",
+                                            "To": "@parameters('complianceEmailAddress')"
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['office365']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/v2/Mail"
+                                    },
+                                    "runAfter": {
+                                        "Set_email_body": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ApiConnection"
+                                },
+                                "Set_email_body": {
+                                    "inputs": {
+                                        "name": "emailBody",
+                                        "value": "<style type=\"text/css\">\n\th1 {\n\t\tfont-family: \"Segoe UI\";\n\t\tfont-size: 32px;\n\t\tfont-style: normal;\n\t\tfont-variant: normal;\n\t\tfont-weight: 700;\n\t\tline-height: 30px;\n\t}\n\n\th2 {\n\t\tfont-family: \"Segoe UI\";\n\t\tfont-size: 20px;\n\t\tfont-style: normal;\n\t\tfont-variant: normal;\n\t\tfont-weight: 700;\n\t\tline-height: 15px;\n\t}\n\n\th3 {\n\t\tfont-family: \"Segoe UI\";\n\t\tfont-size: 22px;\n\t\tfont-style: normal;\n\t\tfont-variant: normal;\n\t\tfont-weight: 700;\n\t\tline-height: 23.1px;\n\t}\n\n\tp {\n\t\tfont-family: \"Segoe UI\";\n\t\tfont-size: 16px;\n\t\tfont-style: normal;\n\t\tfont-variant: normal;\n\t\tfont-weight: 400;\n\t\tline-height: 20px;\n\t}\n</style>\n<table align=\"center\" border=\"0\" cellpadding=\"1\" cellspacing=\"1\" style=\"width:800px;\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<th style=\"text-align:center; width:735px\">\n\t\t\t\t<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width: 550px;\">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td><img src=\"https://upload.wikimedia.org/wikipedia/fr/thumb/7/77/TF1_%282013%29.svg/1200px-TF1_%282013%29.svg.png\" alt=\"\" width=\"125\" height=\"46\" /></td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t<td><img src=\"https://raw.githubusercontent.com/Azure/Azure-Security-Center/master/.github/images/asc.png\" alt=\"\" width=\"125\" height=\"125\" /></td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<h1 style=\"text-align: left;\">Azure Traffic Analytics</h1>\n\t\t\t\t\t\t\t\t<h2 style=\"text-align: left;\">Malicious flows blocked!</h2>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t</table>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width:735px\">\n\t\t\t\t<p style=\"text-align: center;\">Azure Traffic Analytics has detected a malicious flow from <strong>source IP: @{items('For_each_Malicious_flows')['SourceIP']} located in the country code @{items('For_each_Malicious_flows')['Country_s']}</strong> on your machine <strong>@{items('For_each_Malicious_flows')['VM_s']}</strong>. The attack was stopped by blocking the attacking IP address(es) in the VM's Network Security Group (NSG) . Please review the VM's network configuration and change it if necessary.</p>\n\t\t\t</td>\n\t\t</tr>\n<tr><td>&nbsp;</td></tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 735px; border-color: rgb(221, 221, 221); border-bottom-style: solid;\">\n\t\t\t\t<h3>Network Security Group used to block the malicious flows</h3>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width:735px\">\n\t\t\t\t<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width: 750px;\">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Subscription</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{items('For_each_Malicious_flows')['SubscriptionId']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Resource Group</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{items('For_each_Malicious_flows')['NSGRgName']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Name</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{items('For_each_Malicious_flows')['NSGName']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Rule</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>BlockMaliciousFlow-@{variables('rulePriority')}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t</table>\n\t\t\t</td>\n\t\t</tr>\n<tr><td>&nbsp;</td></tr>\n        <tr>\n\t\t\t<td style=\"width: 735px; border-color: rgb(221, 221, 221); border-bottom-style: solid;\">\n\t\t\t\t<h3>Alert detail</h3>\n\t\t\t</td>\n        </tr>\n        <td style=\"width:735px\">\n\t\t\t\t<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width: 750px;\">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Flow start time (UTC)</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{items('For_each_Malicious_flows')['FlowStartTime_t']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Flow end time (UTC)</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{items('For_each_Malicious_flows')['FlowEndTime_t']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Source</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>IP: @{items('For_each_Malicious_flows')['SourceIP']}, Country code: @{items('For_each_Malicious_flows')['Country_s']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Destination</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>IP: @{items('For_each_Malicious_flows')['DestinationIP']}, Subnet: @{items('For_each_Malicious_flows')['DestinationSubnet']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Protocol</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>Protocol: @{items('For_each_Malicious_flows')['Protocol']}, Port:  @{items('For_each_Malicious_flows')['DestinationPort']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t</table>\n\t\t\t</td>\n        </tr>\n<tr><td>&nbsp;</td></tr>\n        <tr>\n\t\t\t<td style=\"width: 735px; border-color: rgb(221, 221, 221); border-bottom-style: solid;\">\n\t\t\t\t<h3>Reference document</h3>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width:735px\">\n\t\t\t\t<ol>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<p>Click <a href=\"https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics-schema?WT.mc_id=AZ-MVP-5003548\">here</a> to view the schema and data aggregation in Traffic Analytics.</p>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<p>Click <a href=\"https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics?WT.mc_id=AZ-MVP-5003548\">here</a> to get information on how works Traffic Analytics.</p>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<p>Click <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">here</a> to view the country codes reference guide.\n\t\t\t\t\t\t</p>\n\t\t\t\t\t</li>\n\t\t\t\t</ol>\n\t\t\t</td>\n\t\t</tr>\n\t</tbody>\n</table>"
+                                    },
+                                    "runAfter": {
+                                        "HTTP_-_Create_NSG_Rule": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable"
+                                }
+                            },
+                            "foreach": "@body('Json_-_Parse_malicious_flows')",
+                            "runAfter": {
+                                "Json_-_Parse_malicious_flows": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "runtimeConfiguration": {
+                                "concurrency": {
+                                    "repetitions": 1
+                                }
+                            },
+                            "type": "Foreach"
+                        },
+                        "Get_Malicious_flows_from_Traffic_Analytics": {
+                            "inputs": {
+                                "body": "AzureNetworkAnalytics_CL \n| where TimeGenerated >= todatetime(\"@{triggerBody()?['data']?['alertContext']?['condition']?['windowStartTime']}\") - 10m\n| extend SourceIP=SrcIP_s\n| extend DestinationIP=DestIP_s\n| extend SubscriptionId=tostring(split(NSGList_s, '/', 0)[0])\n| extend NSGRuleAction = FlowStatus_s\n| extend NSGRuleName = NSGRule_s\n| extend NSGName=tostring(split(NSGList_s, '/', 2)[0])\n| extend NSGRgName=tostring(split(NSGList_s, '/', 1)[0])\n| extend VMRgName = tostring(split(VM_s, '/', 0)[0])\n| extend VMName = tostring(split(VM_s, '/', 1)[0])\n| where \"'A'\" has NSGRuleAction\n| where FlowType_s == \"MaliciousFlow\"\n| project TimeGenerated, TimeProcessed_t, FlowStartTime_t, FlowEndTime_t, FlowIntervalStartTime_t, FlowIntervalEndTime_t, SubscriptionId, VMRgName, VMName, NSGRgName, NSGName, NSGRuleName, Country_s, SourceIP, DestinationIP, DestinationPort=DestPort_d, VM_s, Protocol=L7Protocol_s, [\"RuleAction\"]=NSGRuleAction, DestinationSubnet=Subnet2_s\n| sort by TimeGenerated asc \n| take @{first(triggerBody()?['data']?['alertContext']?['condition']?['allOf'])?['metricValue']}",
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/queryData",
+                                "queries": {
+                                    "resourcegroups": "@first(skip(split(variables('logAnalyticsWorkspaceId'),'/'),4))",
+                                    "resourcename": "@first(skip(split(variables('logAnalyticsWorkspaceId'),'/'),8))",
+                                    "resourcetype": "@first(skip(split(variables('logAnalyticsWorkspaceId'),'/'),6))",
+                                    "subscriptions": "@first(skip(split(variables('logAnalyticsWorkspaceId'),'/'),2))",
+                                    "timerange": "last 24 hours"
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_logAnalyticsWorkspaceId": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection"
+                        },
+                        "Initialize_NSG_rule_priority": {
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "rulePriority",
+                                        "type": "integer",
+                                        "value": 100
+                                    }
+                                ]
+                            },
+                            "runAfter": {},
+                            "type": "InitializeVariable"
+                        },
+                        "Initialize_email_body": {
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "emailBody",
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "runAfter": {
+                                "Initialize_NSG_rule_priority": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable"
+                        },
+                        "Initialize_logAnalyticsWorkspaceId": {
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "logAnalyticsWorkspaceId",
+                                        "type": "string",
+                                        "value": "@first(triggerBody()?['data']?['essentials']?['alertTargetIDs'])"
+                                    }
+                                ]
+                            },
+                            "runAfter": {
+                                "Initialize_email_body": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable"
+                        },
+                        "Json_-_Parse_malicious_flows": {
+                            "inputs": {
+                                "content": "@body('Get_Malicious_flows_from_Traffic_Analytics')?['value']",
+                                "schema": {
+                                    "items": {
+                                        "properties": {
+                                            "Country_s": {
+                                                "type": "string"
+                                            },
+                                            "DestinationIP": {
+                                                "type": "string"
+                                            },
+                                            "DestinationPort": {
+                                                "type": "integer"
+                                            },
+                                            "DestinationSubnet": {
+                                                "type": "string"
+                                            },
+                                            "FlowEndTime_t": {
+                                                "type": "string"
+                                            },
+                                            "FlowIntervalEndTime_t": {
+                                                "type": "string"
+                                            },
+                                            "FlowIntervalStartTime_t": {
+                                                "type": "string"
+                                            },
+                                            "FlowStartTime_t": {
+                                                "type": "string"
+                                            },
+                                            "NSGName": {
+                                                "type": "string"
+                                            },
+                                            "NSGRgName": {
+                                                "type": "string"
+                                            },
+                                            "NSGRuleName": {
+                                                "type": "string"
+                                            },
+                                            "Protocol": {
+                                                "type": "string"
+                                            },
+                                            "RuleAction": {
+                                                "type": "string"
+                                            },
+                                            "SourceIP": {
+                                                "type": "string"
+                                            },
+                                            "SubscriptionId": {
+                                                "type": "string"
+                                            },
+                                            "TimeGenerated": {
+                                                "type": "string"
+                                            },
+                                            "TimeProcessed_t": {
+                                                "type": "string"
+                                            },
+                                            "VMName": {
+                                                "type": "string"
+                                            },
+                                            "VMRgName": {
+                                                "type": "string"
+                                            },
+                                            "VM_s": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "TimeGenerated",
+                                            "TimeProcessed_t",
+                                            "FlowStartTime_t",
+                                            "FlowEndTime_t",
+                                            "FlowIntervalStartTime_t",
+                                            "FlowIntervalEndTime_t",
+                                            "SubscriptionId",
+                                            "VMRgName",
+                                            "VMName",
+                                            "NSGRgName",
+                                            "NSGName",
+                                            "NSGRuleName",
+                                            "Country_s",
+                                            "SourceIP",
+                                            "DestinationIP",
+                                            "DestinationPort",
+                                            "VM_s",
+                                            "Protocol",
+                                            "RuleAction",
+                                            "DestinationSubnet"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "runAfter": {
+                                "Get_Malicious_flows_from_Traffic_Analytics": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson"
+                        }
+                    },
                     "contentVersion": "1.0.0.0",
+                    "outputs": {},
                     "parameters": {
                         "$connections": {
                             "defaultValue": {},
                             "type": "Object"
                         },
                         "complianceEmailAddress": {
-                            "defaultValue": "[parameters('sendEmailTo')]",
+                            "defaultValue": "",
                             "type": "String"
                         }
                     },
                     "triggers": {
                         "manual": {
-                            "type": "Request",
-                            "kind": "Http",
                             "inputs": {
                                 "schema": {
                                     "properties": {
@@ -300,565 +620,11 @@
                                     },
                                     "type": "object"
                                 }
-                            }
+                            },
+                            "kind": "Http",
+                            "type": "Request"
                         }
-                    },
-                    "actions": {
-                        "For_each_tables": {
-                            "foreach": "@body('Parse_JSON')?['data']?['SearchResult']?['tables']",
-                            "actions": {
-                                "For_each_Malicious_flows": {
-                                    "foreach": "@items('For_each_tables')?['rows']",
-                                    "actions": {
-                                        "Compose_one_Malicious_Flow": {
-                                            "runAfter": {},
-                                            "type": "Compose",
-                                            "inputs": {
-                                                "Country_s": "@last(take(items('For_each_Malicious_flows'),13))",
-                                                "DestinationIP": "@last(take(items('For_each_Malicious_flows'),15))",
-                                                "DestinationPort": "@last(take(items('For_each_Malicious_flows'),16))",
-                                                "DestinationSubnet": "@last(take(items('For_each_Malicious_flows'),20))",
-                                                "FlowEndTime_t": "@last(take(items('For_each_Malicious_flows'),4))",
-                                                "FlowIntervalEndTime_t": "@last(take(items('For_each_Malicious_flows'),6))",
-                                                "FlowIntervalStartTime_t": "@last(take(items('For_each_Malicious_flows'),5))",
-                                                "FlowStartTime_t": "@last(take(items('For_each_Malicious_flows'),3))",
-                                                "NSGName": "@last(take(items('For_each_Malicious_flows'),11))",
-                                                "NSGRgName": "@last(take(items('For_each_Malicious_flows'),10))",
-                                                "NSGRuleName": "@last(take(items('For_each_Malicious_flows'),12))",
-                                                "Protocol": "@last(take(items('For_each_Malicious_flows'),18))",
-                                                "RuleAction": "@last(take(items('For_each_Malicious_flows'),19))",
-                                                "SourceIP": "@last(take(items('For_each_Malicious_flows'),14))",
-                                                "SubscriptionId": "@last(take(items('For_each_Malicious_flows'),7))",
-                                                "TimeProcessed_t": "@last(take(items('For_each_Malicious_flows'),2))",
-                                                "VMName": "@last(take(items('For_each_Malicious_flows'),9))",
-                                                "VMRgName": "@last(take(items('For_each_Malicious_flows'),8))",
-                                                "VM_s": "@last(take(items('For_each_Malicious_flows'),17))"
-                                            }
-                                        },
-                                        "Filter_Inbound_NSG_rules": {
-                                            "runAfter": {
-                                                "HTTP_-_Get_NSG_rules": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "Query",
-                                            "inputs": {
-                                                "from": "@body('HTTP_-_Get_NSG_rules')?['value']",
-                                                "where": "@equals(item()?['properties']?['direction'], 'Inbound')"
-                                            }
-                                        },
-                                        "For_each_Inbound_NSG_rules": {
-                                            "foreach": "@body('Filter_Inbound_NSG_rules')",
-                                            "actions": {
-                                                "Condition_-_Checking_if_rule_priority_is_available": {
-                                                    "actions": {
-                                                        "Increment_NSG_rule_priority": {
-                                                            "runAfter": {},
-                                                            "type": "IncrementVariable",
-                                                            "inputs": {
-                                                                "name": "rulePriority"
-                                                            }
-                                                        }
-                                                    },
-                                                    "runAfter": {},
-                                                    "expression": {
-                                                        "and": [
-                                                            {
-                                                                "equals": [
-                                                                    "@item()?['properties']?['priority']",
-                                                                    "@variables('rulePriority')"
-                                                                ]
-                                                            }
-                                                        ]
-                                                    },
-                                                    "type": "If"
-                                                }
-                                            },
-                                            "runAfter": {
-                                                "Reset_NSG_rule_priority": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "Foreach",
-                                            "runtimeConfiguration": {
-                                                "concurrency": {
-                                                    "repetitions": 1
-                                                }
-                                            }
-                                        },
-                                        "HTTP_-_Create_NSG_Rule": {
-                                            "runAfter": {
-                                                "For_each_Inbound_NSG_rules": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "Http",
-                                            "inputs": {
-                                                "authentication": {
-                                                    "type": "ManagedServiceIdentity"
-                                                },
-                                                "body": {
-                                                    "properties": {
-                                                        "access": "Deny",
-                                                        "description": "@{concat('NSG Traffic Analytics Malicious flow start time: ',outputs('Compose_one_Malicious_Flow')?['FlowStartTime_t'])}",
-                                                        "destinationAddressPrefix": "@{outputs('Compose_one_Malicious_Flow')?['DestinationIP']}",
-                                                        "destinationPortRange": "@{outputs('Compose_one_Malicious_Flow')?['DestinationPort']}",
-                                                        "direction": "Inbound",
-                                                        "priority": "@variables('rulePriority')",
-                                                        "protocol": "*",
-                                                        "sourceAddressPrefix": "@{outputs('Compose_one_Malicious_Flow')?['SourceIP']}",
-                                                        "sourcePortRange": "*"
-                                                    }
-                                                },
-                                                "method": "PUT",
-                                                "uri": "https://management.azure.com/subscriptions/@{outputs('Compose_one_Malicious_Flow')?['SubscriptionId']}/resourceGroups/@{outputs('Compose_one_Malicious_Flow')?['NSGRgName']}/providers/Microsoft.Network/networkSecurityGroups/@{outputs('Compose_one_Malicious_Flow')?['NSGName']}/securityRules/BlockMaliciousFlow-@{variables('rulePriority')}?api-version=2020-05-01"
-                                            }
-                                        },
-                                        "HTTP_-_Get_NSG_rules": {
-                                            "runAfter": {
-                                                "Compose_one_Malicious_Flow": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "Http",
-                                            "inputs": {
-                                                "authentication": {
-                                                    "type": "ManagedServiceIdentity"
-                                                },
-                                                "method": "GET",
-                                                "uri": "https://management.azure.com/subscriptions/@{outputs('Compose_one_Malicious_Flow')?['SubscriptionId']}/resourceGroups/@{outputs('Compose_one_Malicious_Flow')?['NSGRgName']}/providers/Microsoft.Network/networkSecurityGroups/@{outputs('Compose_one_Malicious_Flow')?['NSGName']}/securityRules?api-version=2020-05-01"
-                                            }
-                                        },
-                                        "Reset_NSG_rule_priority": {
-                                            "runAfter": {
-                                                "Filter_Inbound_NSG_rules": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "SetVariable",
-                                            "inputs": {
-                                                "name": "rulePriority",
-                                                "value": 100
-                                            }
-                                        },
-                                        "Send_an_email_(V2)": {
-                                            "runAfter": {
-                                                "Set_email_body": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "ApiConnection",
-                                            "inputs": {
-                                                "body": {
-                                                    "Body": "<p>@{variables('emailBody')}</p>",
-                                                    "Importance": "High",
-                                                    "Subject": "Malicious flows blocked - Detected by NSG Traffic Analytics - Blocked by Logic App",
-                                                    "To": "@parameters('complianceEmailAddress')"
-                                                },
-                                                "host": {
-                                                    "connection": {
-                                                        "name": "@parameters('$connections')['office365']['connectionId']"
-                                                    }
-                                                },
-                                                "method": "post",
-                                                "path": "/v2/Mail"
-                                            }
-                                        },
-                                        "Set_email_body": {
-                                            "runAfter": {
-                                                "HTTP_-_Create_NSG_Rule": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "SetVariable",
-                                            "inputs": {
-                                                "name": "emailBody",
-                                                "value": "<style type=\"text/css\">\n\th1 {\n\t\tfont-family: \"Segoe UI\";\n\t\tfont-size: 32px;\n\t\tfont-style: normal;\n\t\tfont-variant: normal;\n\t\tfont-weight: 700;\n\t\tline-height: 30px;\n\t}\n\n\th2 {\n\t\tfont-family: \"Segoe UI\";\n\t\tfont-size: 20px;\n\t\tfont-style: normal;\n\t\tfont-variant: normal;\n\t\tfont-weight: 700;\n\t\tline-height: 15px;\n\t}\n\n\th3 {\n\t\tfont-family: \"Segoe UI\";\n\t\tfont-size: 22px;\n\t\tfont-style: normal;\n\t\tfont-variant: normal;\n\t\tfont-weight: 700;\n\t\tline-height: 23.1px;\n\t}\n\n\tp {\n\t\tfont-family: \"Segoe UI\";\n\t\tfont-size: 16px;\n\t\tfont-style: normal;\n\t\tfont-variant: normal;\n\t\tfont-weight: 400;\n\t\tline-height: 20px;\n\t}\n</style>\n<table align=\"center\" border=\"0\" cellpadding=\"1\" cellspacing=\"1\" style=\"width:800px;\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<th style=\"text-align:center; width:735px\">\n\t\t\t\t<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width: 550px;\">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td><img src=\"https://raw.githubusercontent.com/Azure/Azure-Security-Center/master/.github/images/asc.png\" alt=\"\" width=\"125\" height=\"125\" /></td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<h1 style=\"text-align: left;\">Azure Traffic Analytics</h1>\n\t\t\t\t\t\t\t\t<h2 style=\"text-align: left;\">Malicious flows blocked!</h2>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t</table>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width:735px\">\n\t\t\t\t<p style=\"text-align: center;\">Azure Traffic Analytics has detected a malicious flow from <strong>source IP: @{outputs('Compose_one_Malicious_Flow')?['SourceIP']} located in the country code @{outputs('Compose_one_Malicious_Flow')?['Country_s']}</strong> on your machine <strong>@{outputs('Compose_one_Malicious_Flow')?['VM_s']}</strong>. The attack was stopped by blocking the attacking IP address(es) in the VM's Network Security Group (NSG) . Please review the VM's network configuration and change it if necessary.</p>\n\t\t\t</td>\n\t\t</tr>\n<tr><td>&nbsp;</td></tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 735px; border-color: rgb(221, 221, 221); border-bottom-style: solid;\">\n\t\t\t\t<h3>Network Security Group used to block the malicious flows</h3>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width:735px\">\n\t\t\t\t<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width: 750px;\">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Subscription</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{outputs('Compose_one_Malicious_Flow')?['SubscriptionId']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Resource Group</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{outputs('Compose_one_Malicious_Flow')?['NSGRgName']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Name</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{outputs('Compose_one_Malicious_Flow')?['NSGName']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Rule</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>BlockMaliciousFlow-@{variables('rulePriority')}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t</table>\n\t\t\t</td>\n\t\t</tr>\n<tr><td>&nbsp;</td></tr>\n        <tr>\n\t\t\t<td style=\"width: 735px; border-color: rgb(221, 221, 221); border-bottom-style: solid;\">\n\t\t\t\t<h3>Alert detail</h3>\n\t\t\t</td>\n        </tr>\n        <td style=\"width:735px\">\n\t\t\t\t<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width: 750px;\">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Flow start time (UTC)</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{outputs('Compose_one_Malicious_Flow')?['FlowStartTime_t']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Flow end time (UTC)</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>@{outputs('Compose_one_Malicious_Flow')?['FlowEndTime_t']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Source</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>IP: @{outputs('Compose_one_Malicious_Flow')?['SourceIP']}, Country code: @{outputs('Compose_one_Malicious_Flow')?['Country_s']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Destination</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>IP: @{outputs('Compose_one_Malicious_Flow')?['DestinationIP']}, Subnet: @{outputs('Compose_one_Malicious_Flow')?['DestinationSubnet']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td style=\"width: 200px;\">\n\t\t\t\t\t\t\t\t<p><strong>Protocol</strong></p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td style=\"width: 550px;\">\n\t\t\t\t\t\t\t\t<p>Protocol: @{outputs('Compose_one_Malicious_Flow')?['Protocol']}, Port:  @{outputs('Compose_one_Malicious_Flow')?['DestinationPort']}</p>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t</table>\n\t\t\t</td>\n        </tr>\n<tr><td>&nbsp;</td></tr>\n        <tr>\n\t\t\t<td style=\"width: 735px; border-color: rgb(221, 221, 221); border-bottom-style: solid;\">\n\t\t\t\t<h3>Reference document</h3>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width:735px\">\n\t\t\t\t<ol>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<p>Click <a href=\"https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics-schema?WT.mc_id=AZ-MVP-5003548\">here</a> to view the schema and data aggregation in Traffic Analytics.</p>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<p>Click <a href=\"https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics?WT.mc_id=AZ-MVP-5003548\">here</a> to get information on how works Traffic Analytics.</p>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<p>Click <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">here</a> to view the country codes reference guide.\n\t\t\t\t\t\t</p>\n\t\t\t\t\t</li>\n\t\t\t\t</ol>\n\t\t\t</td>\n\t\t</tr>\n\t</tbody>\n</table>"
-                                            }
-                                        }
-                                    },
-                                    "runAfter": {},
-                                    "type": "Foreach",
-                                    "runtimeConfiguration": {
-                                        "concurrency": {
-                                            "repetitions": 1
-                                        }
-                                    }
-                                }
-                            },
-                            "runAfter": {
-                                "Initialize_email_body": [
-                                    "Succeeded"
-                                ]
-                            },
-                            "type": "Foreach",
-                            "runtimeConfiguration": {
-                                "concurrency": {
-                                    "repetitions": 1
-                                }
-                            }
-                        },
-                        "Initialize_NSG_rule_priority": {
-                            "runAfter": {
-                                "Parse_JSON": [
-                                    "Succeeded"
-                                ]
-                            },
-                            "type": "InitializeVariable",
-                            "inputs": {
-                                "variables": [
-                                    {
-                                        "name": "rulePriority",
-                                        "type": "integer",
-                                        "value": 100
-                                    }
-                                ]
-                            }
-                        },
-                        "Initialize_email_body": {
-                            "runAfter": {
-                                "Initialize_NSG_rule_priority": [
-                                    "Succeeded"
-                                ]
-                            },
-                            "type": "InitializeVariable",
-                            "inputs": {
-                                "variables": [
-                                    {
-                                        "name": "emailBody",
-                                        "type": "string"
-                                    }
-                                ]
-                            }
-                        },
-                        "Parse_JSON": {
-                            "runAfter": {},
-                            "type": "ParseJson",
-                            "inputs": {
-                                "content": "@triggerBody()",
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "properties": {
-                                                "AlertRuleName": {
-                                                    "type": "string"
-                                                },
-                                                "AlertThresholdOperator": {
-                                                    "type": "string"
-                                                },
-                                                "AlertThresholdValue": {
-                                                    "type": "integer"
-                                                },
-                                                "AlertType": {
-                                                    "type": "string"
-                                                },
-                                                "Description": {
-                                                    "type": "string"
-                                                },
-                                                "LinkToFilteredSearchResultsAPI": {
-                                                    "type": "string"
-                                                },
-                                                "LinkToFilteredSearchResultsUI": {
-                                                    "type": "string"
-                                                },
-                                                "LinkToSearchResults": {
-                                                    "type": "string"
-                                                },
-                                                "LinkToSearchResultsAPI": {
-                                                    "type": "string"
-                                                },
-                                                "ResourceId": {
-                                                    "type": "string"
-                                                },
-                                                "ResultCount": {
-                                                    "type": "integer"
-                                                },
-                                                "SearchIntervalEndtimeUtc": {
-                                                    "type": "string"
-                                                },
-                                                "SearchIntervalInSeconds": {
-                                                    "type": "integer"
-                                                },
-                                                "SearchIntervalStartTimeUtc": {
-                                                    "type": "string"
-                                                },
-                                                "SearchQuery": {
-                                                    "type": "string"
-                                                },
-                                                "SearchResult": {
-                                                    "properties": {
-                                                        "dataSources": {
-                                                            "items": {
-                                                                "properties": {
-                                                                    "region": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "resourceId": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "tables": {
-                                                                        "items": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "type": "array"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "resourceId",
-                                                                    "region",
-                                                                    "tables"
-                                                                ],
-                                                                "type": "object"
-                                                            },
-                                                            "type": "array"
-                                                        },
-                                                        "statistics": {
-                                                            "properties": {
-                                                                "query": {
-                                                                    "properties": {
-                                                                        "datasetStatistics": {
-                                                                            "items": {
-                                                                                "properties": {
-                                                                                    "tableRowCount": {
-                                                                                        "type": "integer"
-                                                                                    },
-                                                                                    "tableSize": {
-                                                                                        "type": "integer"
-                                                                                    }
-                                                                                },
-                                                                                "required": [
-                                                                                    "tableRowCount",
-                                                                                    "tableSize"
-                                                                                ],
-                                                                                "type": "object"
-                                                                            },
-                                                                            "type": "array"
-                                                                        },
-                                                                        "executionTime": {
-                                                                            "type": "number"
-                                                                        },
-                                                                        "inputDatasetStatistics": {
-                                                                            "properties": {
-                                                                                "extents": {
-                                                                                    "properties": {
-                                                                                        "scanned": {
-                                                                                            "type": "integer"
-                                                                                        },
-                                                                                        "scannedMaxDatetime": {
-                                                                                            "type": "string"
-                                                                                        },
-                                                                                        "scannedMinDatetime": {
-                                                                                            "type": "string"
-                                                                                        },
-                                                                                        "total": {
-                                                                                            "type": "integer"
-                                                                                        }
-                                                                                    },
-                                                                                    "type": "object"
-                                                                                },
-                                                                                "rows": {
-                                                                                    "properties": {
-                                                                                        "scanned": {
-                                                                                            "type": "integer"
-                                                                                        },
-                                                                                        "total": {
-                                                                                            "type": "integer"
-                                                                                        }
-                                                                                    },
-                                                                                    "type": "object"
-                                                                                },
-                                                                                "rowstores": {
-                                                                                    "properties": {
-                                                                                        "scannedRows": {
-                                                                                            "type": "integer"
-                                                                                        },
-                                                                                        "scannedValuesSize": {
-                                                                                            "type": "integer"
-                                                                                        }
-                                                                                    },
-                                                                                    "type": "object"
-                                                                                },
-                                                                                "shards": {
-                                                                                    "properties": {
-                                                                                        "queriesGeneric": {
-                                                                                            "type": "integer"
-                                                                                        },
-                                                                                        "queriesSpecialized": {
-                                                                                            "type": "integer"
-                                                                                        }
-                                                                                    },
-                                                                                    "type": "object"
-                                                                                }
-                                                                            },
-                                                                            "type": "object"
-                                                                        },
-                                                                        "resourceUsage": {
-                                                                            "properties": {
-                                                                                "cache": {
-                                                                                    "properties": {
-                                                                                        "disk": {
-                                                                                            "properties": {
-                                                                                                "hits": {
-                                                                                                    "type": "integer"
-                                                                                                },
-                                                                                                "misses": {
-                                                                                                    "type": "integer"
-                                                                                                },
-                                                                                                "total": {
-                                                                                                    "type": "integer"
-                                                                                                }
-                                                                                            },
-                                                                                            "type": "object"
-                                                                                        },
-                                                                                        "memory": {
-                                                                                            "properties": {
-                                                                                                "hits": {
-                                                                                                    "type": "integer"
-                                                                                                },
-                                                                                                "misses": {
-                                                                                                    "type": "integer"
-                                                                                                },
-                                                                                                "total": {
-                                                                                                    "type": "integer"
-                                                                                                }
-                                                                                            },
-                                                                                            "type": "object"
-                                                                                        },
-                                                                                        "shards": {
-                                                                                            "properties": {
-                                                                                                "bypassbytes": {
-                                                                                                    "type": "integer"
-                                                                                                },
-                                                                                                "cold": {
-                                                                                                    "properties": {
-                                                                                                        "hitbytes": {
-                                                                                                            "type": "integer"
-                                                                                                        },
-                                                                                                        "missbytes": {
-                                                                                                            "type": "integer"
-                                                                                                        },
-                                                                                                        "retrievebytes": {
-                                                                                                            "type": "integer"
-                                                                                                        }
-                                                                                                    },
-                                                                                                    "type": "object"
-                                                                                                },
-                                                                                                "hot": {
-                                                                                                    "properties": {
-                                                                                                        "hitbytes": {
-                                                                                                            "type": "integer"
-                                                                                                        },
-                                                                                                        "missbytes": {
-                                                                                                            "type": "integer"
-                                                                                                        },
-                                                                                                        "retrievebytes": {
-                                                                                                            "type": "integer"
-                                                                                                        }
-                                                                                                    },
-                                                                                                    "type": "object"
-                                                                                                }
-                                                                                            },
-                                                                                            "type": "object"
-                                                                                        }
-                                                                                    },
-                                                                                    "type": "object"
-                                                                                },
-                                                                                "cpu": {
-                                                                                    "properties": {
-                                                                                        "kernel": {
-                                                                                            "type": "string"
-                                                                                        },
-                                                                                        "totalCpu": {
-                                                                                            "type": "string"
-                                                                                        },
-                                                                                        "user": {
-                                                                                            "type": "string"
-                                                                                        }
-                                                                                    },
-                                                                                    "type": "object"
-                                                                                },
-                                                                                "memory": {
-                                                                                    "properties": {
-                                                                                        "peakPerNode": {
-                                                                                            "type": "integer"
-                                                                                        }
-                                                                                    },
-                                                                                    "type": "object"
-                                                                                }
-                                                                            },
-                                                                            "type": "object"
-                                                                        }
-                                                                    },
-                                                                    "type": "object"
-                                                                }
-                                                            },
-                                                            "type": "object"
-                                                        },
-                                                        "tables": {
-                                                            "items": {
-                                                                "properties": {
-                                                                    "columns": {
-                                                                        "items": {
-                                                                            "properties": {
-                                                                                "name": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "type": {
-                                                                                    "type": "string"
-                                                                                }
-                                                                            },
-                                                                            "required": [
-                                                                                "name",
-                                                                                "type"
-                                                                            ],
-                                                                            "type": "object"
-                                                                        },
-                                                                        "type": "array"
-                                                                    },
-                                                                    "name": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "rows": {
-                                                                        "items": {
-                                                                            "type": "array"
-                                                                        },
-                                                                        "type": "array"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "name",
-                                                                    "columns",
-                                                                    "rows"
-                                                                ],
-                                                                "type": "object"
-                                                            },
-                                                            "type": "array"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "Severity": {
-                                                    "type": "string"
-                                                },
-                                                "SubscriptionId": {
-                                                    "type": "string"
-                                                },
-                                                "WorkspaceId": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "schemaId": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "outputs": {}
+                    }
                 },
                 "parameters": {
                     "$connections": {
@@ -874,6 +640,9 @@
                                 "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/azureloganalyticsdatacollector')]"
                             }
                         }
+                    },
+                    "complianceEmailAddress": {
+                        "value": "[parameters('sendEmailTo')]"
                     }
                 }
             }
