@@ -2,7 +2,7 @@
 
 Content
 ------------
-Content of this template is explained in the following article [Automation to block malicious flows detected by Azure Traffic Analytics](https://medium.com/@jamesdld23/automation-to-block-malicious-flows-detected-by-azure-traffic-analytics-b010298ba347).
+Content of this template is explained in the following article [Automation to block malicious flows detected by Azure Traffic Analytics](https://medium.com/microsoftazure/automation-to-block-malicious-flows-detected-by-azure-traffic-analytics-b010298ba347).
 
 
 With Azure [Traffic Analytics](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics?WT.mc_id=AZ-MVP-5003548) on Network Security Groups (NSG) we can visualize precious insights like allowed and denied flows per flow type.
