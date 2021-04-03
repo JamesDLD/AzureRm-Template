@@ -237,6 +237,11 @@
                                             "Succeeded"
                                         ]
                                     },
+                                    "runtimeConfiguration": {
+                                        "concurrency": {
+                                            "repetitions": 1
+                                        }
+                                    },
                                     "type": "Foreach"
                                 },
                                 "HTTP_-_Create_NSG_Rule": {
