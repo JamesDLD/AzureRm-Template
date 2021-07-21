@@ -23,11 +23,11 @@
                 "description": "Office 365 Connection name used for alerting"
             }
         },
-        "azureLoganalyticsDataCollectorName": {
-            "defaultValue": "azureLoganalyticsDataCollector",
+        "azureMonitorLogsName": {
+            "defaultValue": "azureMonitorLogs",
             "type": "String",
             "metadata": {
-                "description": "Azure Logs Analytics Collector Connection name used to probe data from a Log Analytics workspace"
+                "description": "Azure Azure Monitor Logs Connection name used to probe data from a Log Analytics workspace"
             }
         },
         "actionGroupName": {
@@ -157,19 +157,16 @@
         {
             "type": "Microsoft.Web/connections",
             "apiVersion": "2016-06-01",
-            "name": "[parameters('azureLoganalyticsDataCollectorName')]",
+            "name": "[parameters('azureMonitorLogsName')]",
             "location": "westeurope",
             "tags": "[parameters('tags')]",
             "kind": "V1",
             "properties": {
-                "displayName": "Get Azure Log Analytics Workspace Logs",
-                "parameterValues": {
-                    "username": "[reference(parameters('logAnalytics'), '2015-03-20').customerId]",
-                    "password": "[listKeys(parameters('logAnalytics'), providers('Microsoft.OperationalInsights', 'workspaces').apiVersions[0]).primarySharedKey]"
-                },
+                "displayName": "Get Azure Monitor Logs",
+                "parameterValues": {},
                 "customParameterValues": {},
                 "api": {
-                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureloganalyticsdatacollector')]"
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuremonitorlogs')]"
                 }
             }
         },
@@ -181,7 +178,7 @@
             "tags": "[parameters('tags')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/connections', parameters('office365ConnectionName'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('azureLoganalyticsDataCollectorName'))]"
+                "[resourceId('Microsoft.Web/connections', parameters('azureMonitorLogsName'))]"
             ],
             "identity": {
                 "type": "SystemAssigned"
@@ -348,7 +345,7 @@
                                 "body": "AzureNetworkAnalytics_CL \n| where TimeGenerated >= todatetime(\"@{triggerBody()?['data']?['alertContext']?['condition']?['windowStartTime']}\") - 10m\n| extend SourceIP=SrcIP_s\n| extend DestinationIP=DestIP_s\n| extend SubscriptionId=tostring(split(NSGList_s, '/', 0)[0])\n| extend NSGRuleAction = FlowStatus_s\n| extend NSGRuleName = NSGRule_s\n| extend NSGName=tostring(split(NSGList_s, '/', 2)[0])\n| extend NSGRgName=tostring(split(NSGList_s, '/', 1)[0])\n| extend VMRgName = tostring(split(VM_s, '/', 0)[0])\n| extend VMName = tostring(split(VM_s, '/', 1)[0])\n| where \"'A'\" has NSGRuleAction\n| where FlowType_s == \"MaliciousFlow\"\n| project TimeGenerated, TimeProcessed_t, FlowStartTime_t, FlowEndTime_t, FlowIntervalStartTime_t, FlowIntervalEndTime_t, SubscriptionId, VMRgName, VMName, NSGRgName, NSGName, NSGRuleName, Country_s, SourceIP, DestinationIP, DestinationPort=DestPort_d, VM_s, Protocol=L7Protocol_s, [\"RuleAction\"]=NSGRuleAction, DestinationSubnet=Subnet2_s\n| sort by TimeGenerated asc \n| take @{first(triggerBody()?['data']?['alertContext']?['condition']?['allOf'])?['metricValue']}",
                                 "host": {
                                     "connection": {
-                                        "name": "@parameters('$connections')['azureloganalyticsdatacollector']['connectionId']"
+                                        "name": "@parameters('$connections')['azuremonitorlogs']['connectionId']"
                                     }
                                 },
                                 "method": "post",
@@ -643,10 +640,10 @@
                                 "connectionName": "office365",
                                 "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/office365')]"
                             },
-                            "azureloganalyticsdatacollector": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('azureLoganalyticsDataCollectorName'))]",
-                                "connectionName": "azureLoganalyticsDataCollector",
-                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureloganalyticsdatacollector')]"
+                            "azuremonitorlogs": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('azureMonitorLogsName'))]",
+                                "connectionName": "azureMonitorLogs",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuremonitorlogs')]"
                             }
                         }
                     },
