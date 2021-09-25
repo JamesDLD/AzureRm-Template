@@ -1,0 +1,1202 @@
+{
+    "version": "Notebook/1.0",
+    "items": [
+        {
+            "type": 1,
+            "content": {
+                "json": "# OMI Vulnerabilities - Rapid Check #"
+            },
+            "name": "workbookTitle"
+        },
+        {
+            "type": 9,
+            "content": {
+                "version": "KqlParameterItem/1.0",
+                "parameters": [
+                    {
+                        "id": "99cc0623-1cf2-42ee-ae97-0e1321843c9d",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "Subscriptions",
+                        "type": 6,
+                        "isRequired": true,
+                        "multiSelect": true,
+                        "quote": "'",
+                        "delimiter": ",",
+                        "query": "summarize by subscriptionId\r\n| project value = strcat(\"/subscriptions/\", subscriptionId), label = subscriptionId",
+                        "crossComponentResources": [
+                            "value::selected"
+                        ],
+                        "typeSettings": {
+                            "additionalResourceOptions": [
+                                "value::1",
+                                "value::all"
+                            ],
+                            "showDefault": false
+                        },
+                        "defaultValue": "value::1",
+                        "queryType": 1,
+                        "resourceType": "microsoft.resourcegraph/resources",
+                        "value": [
+                            "value::all"
+                        ]
+                    },
+                    {
+                        "id": "e249244e-b556-4ecb-aae0-36843bc5a5a7",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "Workspaces",
+                        "type": 5,
+                        "isRequired": true,
+                        "multiSelect": true,
+                        "quote": "'",
+                        "delimiter": ",",
+                        "query": "where type =~ 'microsoft.operationalinsights/workspaces'\r\n| project id, custId= properties.customerId",
+                        "crossComponentResources": [
+                            "{Subscriptions}"
+                        ],
+                        "typeSettings": {
+                            "additionalResourceOptions": [
+                                "value::1",
+                                "value::all"
+                            ],
+                            "showDefault": false
+                        },
+                        "timeContextFromParameter": "TimeRange",
+                        "defaultValue": "value::1",
+                        "queryType": 1,
+                        "resourceType": "microsoft.resourcegraph/resources",
+                        "value": [
+                            "value::all"
+                        ]
+                    },
+                    {
+                        "id": "5e8549d6-22aa-47e0-a84b-bf1848cd44cc",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "TimeRange",
+                        "type": 4,
+                        "isRequired": true,
+                        "typeSettings": {
+                            "selectableValues": [
+                                {
+                                    "durationMs": 300000
+                                },
+                                {
+                                    "durationMs": 900000
+                                },
+                                {
+                                    "durationMs": 1800000
+                                },
+                                {
+                                    "durationMs": 3600000
+                                },
+                                {
+                                    "durationMs": 14400000
+                                },
+                                {
+                                    "durationMs": 43200000
+                                },
+                                {
+                                    "durationMs": 86400000
+                                },
+                                {
+                                    "durationMs": 172800000
+                                },
+                                {
+                                    "durationMs": 259200000
+                                },
+                                {
+                                    "durationMs": 604800000
+                                },
+                                {
+                                    "durationMs": 1209600000
+                                },
+                                {
+                                    "durationMs": 2419200000
+                                },
+                                {
+                                    "durationMs": 2592000000
+                                },
+                                {
+                                    "durationMs": 5184000000
+                                },
+                                {
+                                    "durationMs": 7776000000
+                                }
+                            ],
+                            "allowCustom": true
+                        },
+                        "value": {
+                            "durationMs": 604800000
+                        }
+                    },
+                    {
+                        "id": "d4354e02-6b2e-41be-b23d-16d8e6292b67",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "Help",
+                        "label": "Show Help",
+                        "type": 10,
+                        "isRequired": true,
+                        "typeSettings": {
+                            "additionalResourceOptions": [],
+                            "showDefault": false
+                        },
+                        "jsonData": "[\r\n  { \"value\": \"Yes\", \"label\": \"Yes\"},\r\n  { \"value\": \"No\", \"label\": \"No\", \"selected\":true },\r\n  { \"value\": \"ChangeLog\", \"label\": \"Change Log\"}\r\n]\r\n",
+                        "timeContext": {
+                            "durationMs": 5184000000
+                        },
+                        "timeContextFromParameter": "TimeRange",
+                        "value": "Yes"
+                    }
+                ],
+                "style": "pills",
+                "queryType": 0,
+                "resourceType": "microsoft.resourcegraph/resources"
+            },
+            "name": "Parameters"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": ">**Author**\r\n>[Bruno Gabrielli](mailto:bruno.gabrielli@microsoft.com)\r\n>\r\n>**Version 1.7**\r\n>2021-09-24\r\n>- Added exclusion for the *Microsoft.ContainerService* resources in the **Linux non-Azure VMs with OmsAgentForLinux agent.** tile\r\n>\r\n>**Version 1.6**\r\n>2021-09-24\r\n>- Added the search box to the **Linux Azure VMs with OmsAgentForLinux agent.** tile\r\n>\r\n>**Version 1.5**\r\n>2021-09-23\r\n>- Implemented tabbing to differentiate Azure e non-Azure reources\r\n>- Added tile to list Azure VM with MMA agent software a not the extension\r\n>- Restored and completed the Azure Vm DSC tile\r\n>\r\n>**Version 1.4**\r\n>2021-09-22\r\n>- Fixed some cosmetics\r\n>- Hidden the Azure Vm DSC tile, since I can't repro any query result for further analysis\r\n>- Renamed to be just ***OMI Vulnerabilities - Rapid Check***\r\n>\r\n>**Version 1.3**\r\n>2021-09-22\r\n>- Added the tiles for:\r\n>\t- *Linux Diagnostic Extension (LAD)*\r\n>\t- *Desired State Configuration (DSC)*\r\n>\r\n>**Version 1.2**\r\n>2021-09-21\r\n>- Added the _microsoft.hybridcompute/machines/extensions_ provider to include **Azure Arc** machines\r\n>\r\n>**Version 1.1**\r\n>2021-09-21\r\n>- Bugfix and column labelling.\r\n>\r\n>**Version 1.0**\r\n>2021-09-18\r\n>- Initial version."
+            },
+            "conditionalVisibility": {
+                "parameterName": "Help",
+                "comparison": "isEqualTo",
+                "value": "ChangeLog"
+            },
+            "customWidth": "50",
+            "name": "changeLog",
+            "styleSettings": {
+                "showBorder": true
+            }
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "# Get Started #\r\n\r\n-------------------------\r\n\r\nWelcome to the *OMI Vulnerabilities - Rapid Check* workbook. This workbook is designed to provide a quick overview on the Virtual machines (Azure and non-Azure) running the Microsoft Monitoring Agent (MMA) which are impacted by the vulnerability reported by the **Microsoft Security Response Center**.\r\n\r\nThis workbook will check the vulnerability of the MMA software. Should you have the *Change Tracking and Inventory* solution enabled, this workbook will report the OMI version as well. To completely fix the vulnerability it is necessary to install the CVE listed below with high priority:\r\n\r\n- [CVE-2021-38647](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-38647) – Unauthenticated RCE as root\r\n- [CVE-2021-38648](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-38648) – Privilege Escalation vulnerability\r\n- [CVE-2021-38645](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-38645) – Privilege Escalation vulnerability\r\n- [CVE-2021-38649](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-38649) – Privilege Escalation vulnerability\r\n\r\nFor the full guidance, please see the article [Additional Guidance Regarding OMI Vulnerabilities within Azure VM Management Extensions](https://msrc-blog.microsoft.com/2021/09/16/additional-guidance-regarding-omi-vulnerabilities-within-azure-vm-management-extensions/)\r\n\r\n\r\n## Prerequistes ##\r\n\r\n- A [Log Analytics workspace.](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/design-logs-deployment?WT.mc_id=Portal-fx)\r\n\r\n- ***[OPTIONAL]*** An [Automation Account](https://docs.microsoft.com/en-us/azure/automation/automation-create-standalone-account) with the [Change Tracking and Inventory](https://docs.microsoft.com/en-us/azure/automation/change-tracking/enable-from-portal) solution enabled"
+            },
+            "conditionalVisibility": {
+                "parameterName": "Help",
+                "comparison": "isEqualTo",
+                "value": "Yes"
+            },
+            "name": "getStarted"
+        },
+        {
+            "type": 11,
+            "content": {
+                "version": "LinkItem/1.0",
+                "style": "tabs",
+                "links": [
+                    {
+                        "id": "4a9427d1-838b-4cb6-9046-b0470edcff8c",
+                        "cellValue": "selectedTab",
+                        "linkTarget": "parameter",
+                        "linkLabel": "Azure Virtual Machines",
+                        "subTarget": "AzVm",
+                        "style": "link"
+                    },
+                    {
+                        "id": "2b41ceac-5689-472c-a39a-377168dff853",
+                        "cellValue": "selectedTab",
+                        "linkTarget": "parameter",
+                        "linkLabel": "Non-Azure Virtual Machines",
+                        "subTarget": "Non-AzVm",
+                        "style": "link"
+                    }
+                ]
+            },
+            "name": "tab_WorloadType"
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "resources\r\n| where ['type'] == \"microsoft.compute/virtualmachines/extensions\" or ['type'] ==\"microsoft.hybridcompute/machines/extensions\"\r\n| where properties.publisher == \"Microsoft.EnterpriseCloud.Monitoring\"\r\n| extend resId = tolower(tostring(split(id,\"/extensions\")[0]))\r\n| extend vmName = split(id,\"/\")[8]\r\n| extend autoUpgradeEnabled = iff(properties.autoUpgradeMinorVersion == \"true\",'✅','❌')\r\n| project subscriptionId, id, resId, vmName, name, resourceGroup, autoUpgradeEnabled, properties.publisher",
+                            "size": 0,
+                            "queryType": 1,
+                            "resourceType": "microsoft.resourcegraph/resources",
+                            "crossComponentResources": [
+                                "{Subscriptions}"
+                            ],
+                            "gridSettings": {
+                                "rowLimit": 1000
+                            },
+                            "sortBy": []
+                        },
+                        "customWidth": "50",
+                        "conditionalVisibility": {
+                            "parameterName": "_",
+                            "comparison": "isEqualTo",
+                            "value": "_"
+                        },
+                        "name": "argQuery"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "Heartbeat\r\n| where OSType == \"Linux\"\r\n| where ComputerEnvironment ==  \"Azure\"\r\n| summarize arg_max(TimeGenerated,*) by Computer\r\n| extend Version = tostring(split(Version,\"-\")[0])\r\n| extend isImpacted = iif(parse_version(Version) <=  parse_version('1.13.39'), \"Yes\", \"No\")\r\n| join kind=leftouter(\r\n    ConfigurationData\r\n    | where ConfigDataType == \"Software\"\r\n    | summarize arg_max(TimeGenerated, *) by Computer, SoftwareName\r\n    | where SoftwareName startswith \"omi\"\r\n    | extend omiImpacted = iif(parse_version(CurrentVersion) <=  parse_version('1.6.8.0'), \"Yes\", \"No\")\r\n    | project _ResourceId, Computer, omiImpacted, SoftwareType, SoftwareName, CurrentVersion, Publisher\r\n    ) on _ResourceId\r\n| extend _ResourceId == tolower(_ResourceId)\r\n| project TimeGenerated, _ResourceId, Subscription=SubscriptionId, ResourceGroup, Computer, Version, isImpacted, Category, OSName, OsVersion = strcat(OSMajorVersion,\".\",OSMinorVersion), SoftwareType, SoftwareName, CurrentVersion, omiImpacted, Publisher, Details = \"Click for more details ...\"\r\n| sort by TimeGenerated desc, Version desc",
+                            "size": 0,
+                            "timeContext": {
+                                "durationMs": 604800000
+                            },
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "crossComponentResources": [
+                                "{Workspaces}"
+                            ],
+                            "gridSettings": {
+                                "rowLimit": 1000
+                            }
+                        },
+                        "customWidth": "50",
+                        "conditionalVisibility": {
+                            "parameterName": "_",
+                            "comparison": "isEqualTo",
+                            "value": "_"
+                        },
+                        "name": "kustoQuery"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"af570914-a0ef-42c0-8e2b-13011b85a066\",\"mergeType\":\"innerunique\",\"leftTable\":\"argQuery\",\"rightTable\":\"kustoQuery\",\"leftColumn\":\"resId\",\"rightColumn\":\"_ResourceId\"}],\"projectRename\":[{\"originalName\":\"[kustoQuery].TimeGenerated\",\"mergedName\":\"TimeGenerated\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery]._ResourceId\",\"mergedName\":\"_ResourceId\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].Computer\",\"mergedName\":\"Computer\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].resourceGroup\",\"mergedName\":\"resourceGroup\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].isImpacted\",\"mergedName\":\"isImpacted\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].omiImpacted\",\"mergedName\":\"omiImpacted\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Version\",\"mergedName\":\"Version\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].autoUpgradeEnabled\",\"mergedName\":\"autoUpgradeEnabled\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Category\",\"mergedName\":\"Category\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].CurrentVersion\",\"mergedName\":\"CurrentVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSName\",\"mergedName\":\"OSName\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SoftwareName\",\"mergedName\":\"SoftwareName\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SoftwareType\",\"mergedName\":\"SoftwareType\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Publisher\",\"mergedName\":\"Publisher\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Details\",\"mergedName\":\"Details\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SubscriptionId\",\"mergedName\":\"SubscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[argQuery].id\"},{\"originalName\":\"[argQuery].resId\"},{\"originalName\":\"[argQuery].vmName\"},{\"originalName\":\"[argQuery].name\"},{\"originalName\":\"[argQuery].properties_publisher\"},{\"originalName\":\"[argQuery].Pippo\"},{\"originalName\":\"[argQuery].properties_autoUpgradeMinorVersion\"},{\"originalName\":\"[kustoQuery].Subscription\"},{\"originalName\":\"[kustoQuery].ResourceGroup\"}]}",
+                            "size": 0,
+                            "title": "Linux Azure VMs with OmsAgentForLinux extension.",
+                            "showRefreshButton": true,
+                            "showExportToExcel": true,
+                            "queryType": 7,
+                            "gridSettings": {
+                                "formatters": [
+                                    {
+                                        "columnMatch": "$gen_group",
+                                        "formatter": 13,
+                                        "formatOptions": {
+                                            "linkTarget": null,
+                                            "showIcon": true
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "TimeGenerated",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "22.5714ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "_ResourceId",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "25.2857ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Computer",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "21.8571ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "resourceGroup",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "isImpacted",
+                                        "formatter": 18,
+                                        "formatOptions": {
+                                            "thresholdsOptions": "colors",
+                                            "thresholdsGrid": [
+                                                {
+                                                    "operator": "==",
+                                                    "thresholdValue": "Yes",
+                                                    "representation": "redBright",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
+                                                    "operator": "Default",
+                                                    "thresholdValue": null,
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                }
+                                            ],
+                                            "customColumnWidthSetting": "20.5714ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "omiImpacted",
+                                        "formatter": 18,
+                                        "formatOptions": {
+                                            "thresholdsOptions": "colors",
+                                            "thresholdsGrid": [
+                                                {
+                                                    "operator": "==",
+                                                    "thresholdValue": "Yes",
+                                                    "representation": "red",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
+                                                    "operator": "Default",
+                                                    "thresholdValue": null,
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                }
+                                            ],
+                                            "customColumnWidthSetting": "19.1429ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Version",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "26.8571ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Category",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "subscriptionId",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "OSName",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "OsVersion",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "SoftwareName",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "SoftwareType",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "Publisher",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "Details",
+                                        "formatter": 7,
+                                        "formatOptions": {
+                                            "linkTarget": "GenericDetails",
+                                            "linkIsContextBlade": true
+                                        },
+                                        "tooltipFormat": {
+                                            "tooltip": "Click on the link for detailed information about this Virtual Machine."
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Subscription",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "properties_autoUpgradeMinorVersion",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "19.1429ch"
+                                        }
+                                    }
+                                ],
+                                "rowLimit": 1000,
+                                "filter": true,
+                                "hierarchySettings": {
+                                    "treeType": 1,
+                                    "groupBy": [
+                                        "subscriptionId"
+                                    ],
+                                    "expandTopLevel": true
+                                },
+                                "labelSettings": [
+                                    {
+                                        "columnId": "TimeGenerated",
+                                        "label": "Time Generated"
+                                    },
+                                    {
+                                        "columnId": "_ResourceId",
+                                        "label": "Virtual Machine"
+                                    },
+                                    {
+                                        "columnId": "Computer",
+                                        "label": "Computer Name"
+                                    },
+                                    {
+                                        "columnId": "resourceGroup",
+                                        "label": "Resource Group"
+                                    },
+                                    {
+                                        "columnId": "isImpacted",
+                                        "label": "MMA Vulnerable"
+                                    },
+                                    {
+                                        "columnId": "omiImpacted",
+                                        "label": "OMI Vulnerable"
+                                    },
+                                    {
+                                        "columnId": "Version",
+                                        "label": "Agent Extension version"
+                                    },
+                                    {
+                                        "columnId": "autoUpgradeEnabled",
+                                        "label": "Agent Extension Auto Upgrade"
+                                    },
+                                    {
+                                        "columnId": "Category"
+                                    },
+                                    {
+                                        "columnId": "subscriptionId",
+                                        "label": "Subscription"
+                                    },
+                                    {
+                                        "columnId": "CurrentVersion",
+                                        "label": "OMI Current Version"
+                                    },
+                                    {
+                                        "columnId": "OSName",
+                                        "label": "O.S. Name"
+                                    },
+                                    {
+                                        "columnId": "OsVersion",
+                                        "label": "O.S. Version"
+                                    },
+                                    {
+                                        "columnId": "SoftwareName",
+                                        "label": "Software Name"
+                                    },
+                                    {
+                                        "columnId": "SoftwareType",
+                                        "label": "Software Type"
+                                    },
+                                    {
+                                        "columnId": "Publisher"
+                                    },
+                                    {
+                                        "columnId": "Details",
+                                        "label": ""
+                                    }
+                                ]
+                            }
+                        },
+                        "name": "Linux_AzureVM_Ext",
+                        "styleSettings": {
+                            "showBorder": true
+                        }
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\",\"mergeType\":\"rightanti\",\"leftTable\":\"argQuery\",\"rightTable\":\"kustoQuery\",\"leftColumn\":\"resId\",\"rightColumn\":\"_ResourceId\"}],\"projectRename\":[{\"originalName\":\"[kustoQuery].TimeGenerated\",\"mergedName\":\"TimeGenerated\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery]._ResourceId\",\"mergedName\":\"_ResourceId\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Computer\",\"mergedName\":\"Computer\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Version\",\"mergedName\":\"Version\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].isImpacted\",\"mergedName\":\"isImpacted\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Category\",\"mergedName\":\"Category\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].OSName\",\"mergedName\":\"OSName\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].SoftwareType\",\"mergedName\":\"SoftwareType\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].SoftwareName\",\"mergedName\":\"SoftwareName\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].CurrentVersion\",\"mergedName\":\"CurrentVersion\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].omiImpacted\",\"mergedName\":\"omiImpacted\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Publisher\",\"mergedName\":\"Publisher\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Details\",\"mergedName\":\"Details\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Subscription\",\"mergedName\":\"Subscription\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceGroup\",\"mergedName\":\"ResourceGroup\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SubscriptionId\"}]}",
+                            "size": 0,
+                            "title": "Linux Azure VMs with OmsAgentForLinux agent.",
+                            "showRefreshButton": true,
+                            "showExportToExcel": true,
+                            "queryType": 7,
+                            "gridSettings": {
+                                "formatters": [
+                                    {
+                                        "columnMatch": "$gen_group",
+                                        "formatter": 13,
+                                        "formatOptions": {
+                                            "linkTarget": null,
+                                            "showIcon": true
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "TimeGenerated",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "22.5714ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "_ResourceId",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "25.2857ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Computer",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "21.8571ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Version",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "26.8571ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "isImpacted",
+                                        "formatter": 18,
+                                        "formatOptions": {
+                                            "thresholdsOptions": "colors",
+                                            "thresholdsGrid": [
+                                                {
+                                                    "operator": "==",
+                                                    "thresholdValue": "Yes",
+                                                    "representation": "redBright",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
+                                                    "operator": "Default",
+                                                    "thresholdValue": null,
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                }
+                                            ],
+                                            "customColumnWidthSetting": "20.5714ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Category",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "OSName",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "OsVersion",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "SoftwareType",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "SoftwareName",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "omiImpacted",
+                                        "formatter": 18,
+                                        "formatOptions": {
+                                            "thresholdsOptions": "colors",
+                                            "thresholdsGrid": [
+                                                {
+                                                    "operator": "==",
+                                                    "thresholdValue": "Yes",
+                                                    "representation": "red",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
+                                                    "operator": "Default",
+                                                    "thresholdValue": null,
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                }
+                                            ],
+                                            "customColumnWidthSetting": "19.1429ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Publisher",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "Details",
+                                        "formatter": 7,
+                                        "formatOptions": {
+                                            "linkTarget": "GenericDetails",
+                                            "linkIsContextBlade": true
+                                        },
+                                        "tooltipFormat": {
+                                            "tooltip": "Click on the link for detailed information about this Virtual Machine."
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Subscription",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "ResourceGroup",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "resourceGroup",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "subscriptionId",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "properties_autoUpgradeMinorVersion",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "19.1429ch"
+                                        }
+                                    }
+                                ],
+                                "rowLimit": 1000,
+                                "filter": true,
+                                "hierarchySettings": {
+                                    "treeType": 1,
+                                    "groupBy": [
+                                        "Subscription"
+                                    ],
+                                    "expandTopLevel": true
+                                },
+                                "labelSettings": [
+                                    {
+                                        "columnId": "TimeGenerated",
+                                        "label": "Time Generated"
+                                    },
+                                    {
+                                        "columnId": "_ResourceId",
+                                        "label": "Virtual Machine"
+                                    },
+                                    {
+                                        "columnId": "Computer",
+                                        "label": "Computer Name"
+                                    },
+                                    {
+                                        "columnId": "Version",
+                                        "label": "Agent Extension version"
+                                    },
+                                    {
+                                        "columnId": "isImpacted",
+                                        "label": "MMA Vulnerable"
+                                    },
+                                    {
+                                        "columnId": "Category"
+                                    },
+                                    {
+                                        "columnId": "OSName",
+                                        "label": "O.S. Name"
+                                    },
+                                    {
+                                        "columnId": "OsVersion",
+                                        "label": "O.S. Version"
+                                    },
+                                    {
+                                        "columnId": "SoftwareType",
+                                        "label": "Software Type"
+                                    },
+                                    {
+                                        "columnId": "SoftwareName",
+                                        "label": "Software Name"
+                                    },
+                                    {
+                                        "columnId": "CurrentVersion",
+                                        "label": "OMI Current Version"
+                                    },
+                                    {
+                                        "columnId": "omiImpacted",
+                                        "label": "OMI Vulnerable"
+                                    },
+                                    {
+                                        "columnId": "Publisher"
+                                    },
+                                    {
+                                        "columnId": "Details",
+                                        "label": ""
+                                    },
+                                    {
+                                        "columnId": "Subscription"
+                                    }
+                                ]
+                            }
+                        },
+                        "name": "Linux_AzureVM_MMA",
+                        "styleSettings": {
+                            "showBorder": true
+                        }
+                    },
+                    {
+                        "type": 1,
+                        "content": {
+                            "json": "The tile below, will only report the Azure virtual machine running Linux Diagnostic Extension (LAD) without checking if they are vulnerable or not since the Resource Provider does not contanin any info about the LAD version. A manual check is required to see if the version reported in the extension tab of any listed VM is less than:\r\n\r\n- Version ***4.0.13*** if you're using LAD version **4.x**\r\n- Version ***3.0.135*** if you're using LAD version **3.x**",
+                            "style": "info"
+                        },
+                        "name": "LAD_AzureVM_Info",
+                        "styleSettings": {
+                            "showBorder": true
+                        }
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "resources  \r\n| where type =~ 'microsoft.compute/virtualmachines/extensions' and properties.type == 'LinuxDiagnostic'\r\n| project id, name, autoUpgradeMinorVersion = properties.autoUpgradeMinorVersion, extensionType = properties.type, publisher = properties.publisher\r\n| extend vmId = tolower(substring(id, 0, indexof(id, '/extensions/')))\r\n| join kind=inner (\r\n    resources \r\n    | where type =~ 'microsoft.compute/virtualmachines' and properties.storageProfile.osDisk.osType == 'Linux'\r\n    | project vmId = tolower(id), vmName = name, resourceGroup, subscriptionId, powerState = tostring(properties.extended.instanceView.powerState.code)\r\n) on vmId\r\n| extend autoUpgradeEnabled = iff(autoUpgradeMinorVersion == \"true\",'✅','❌')\r\n| project subscriptionId, id, vmId, vmName, name, resourceGroup, extensionType, autoUpgradeEnabled, publisher, Details = \"Click for more details ...\"",
+                            "size": 0,
+                            "title": "Linux Azure VMs with LinuxDiagnostic (LAD) extension.",
+                            "showRefreshButton": true,
+                            "showExportToExcel": true,
+                            "queryType": 1,
+                            "resourceType": "microsoft.resourcegraph/resources",
+                            "crossComponentResources": [
+                                "{Subscriptions}"
+                            ],
+                            "gridSettings": {
+                                "formatters": [
+                                    {
+                                        "columnMatch": "$gen_group",
+                                        "formatter": 15,
+                                        "formatOptions": {
+                                            "linkTarget": null,
+                                            "showIcon": true
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "subscriptionId",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "id",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "name",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "extensionType",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "publisher",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "Details",
+                                        "formatter": 7,
+                                        "formatOptions": {
+                                            "linkTarget": "GenericDetails",
+                                            "linkIsContextBlade": true
+                                        },
+                                        "tooltipFormat": {
+                                            "tooltip": "Click on the link for detailed information about this Virtual Machine."
+                                        }
+                                    }
+                                ],
+                                "rowLimit": 1000,
+                                "filter": true,
+                                "hierarchySettings": {
+                                    "treeType": 1,
+                                    "groupBy": [
+                                        "subscriptionId"
+                                    ],
+                                    "expandTopLevel": true
+                                },
+                                "labelSettings": [
+                                    {
+                                        "columnId": "subscriptionId",
+                                        "label": "Subscription"
+                                    },
+                                    {
+                                        "columnId": "id",
+                                        "label": "Extension Id"
+                                    },
+                                    {
+                                        "columnId": "vmId",
+                                        "label": "Virtual Machine"
+                                    },
+                                    {
+                                        "columnId": "vmName",
+                                        "label": "Computer Name"
+                                    },
+                                    {
+                                        "columnId": "name",
+                                        "label": "Extension Name"
+                                    },
+                                    {
+                                        "columnId": "resourceGroup",
+                                        "label": "Resource Group"
+                                    },
+                                    {
+                                        "columnId": "extensionType",
+                                        "label": "Extension Type"
+                                    },
+                                    {
+                                        "columnId": "autoUpgradeEnabled",
+                                        "label": "LAD Extension Auto Upgrade"
+                                    },
+                                    {
+                                        "columnId": "publisher",
+                                        "label": "Publisher"
+                                    }
+                                ]
+                            }
+                        },
+                        "showPin": true,
+                        "name": "LAD_AzureVM",
+                        "styleSettings": {
+                            "showBorder": true
+                        }
+                    },
+                    {
+                        "type": 1,
+                        "content": {
+                            "json": "The tile below, will only report the Azure virtual machine running DSC Extension without checking if they are vulnerable or not since the Resource Provider does not contanin any info about the DSC version. A manual check is required to see if the version reported in the extension tab of any listed VM is less than:\r\n\r\n- Version ***2.71.1.25*** if you're using DSC version **2.71.X.XX**\r\n- Version ***2.70.0.30*** if you're using DSC version **2.70.X.XX**\r\n- Version ***3.0.0.3*** if you're using DSC version **3.0.0.1**\r\n- Any of the versions above if you're using **2.0.0.0**\r\n",
+                            "style": "info"
+                        },
+                        "name": "Linux_HybridVM_Info"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "resources  \r\n| where type =~ 'microsoft.compute/virtualmachines/extensions' and properties.type == 'DSCForLinux'\r\n| project id, name, autoUpgradeMinorVersion = properties.autoUpgradeMinorVersion, extensionType = properties.type, publisher = properties.publisher\r\n| extend vmId = tolower(substring(id, 0, indexof(id, '/extensions/')))\r\n| join kind=inner (\r\n    resources \r\n    | where type =~ 'microsoft.compute/virtualmachines' and properties.storageProfile.osDisk.osType == 'Linux'\r\n    | project vmId = tolower(id), vmName = name, resourceGroup, subscriptionId, powerState = tostring(properties.extended.instanceView.powerState.code)\r\n) on vmId\r\n| extend autoUpgradeEnabled = iff(autoUpgradeMinorVersion == \"true\",'✅','❌')\r\n| project subscriptionId, id, resId = vmId, vmName, name, resourceGroup, extensionType, autoUpgradeEnabled, publisher, Details = \"Click for more details ...\"\r\n",
+                            "size": 0,
+                            "title": "Linux Azure VMs with DSCForLinux (DSC) extension.",
+                            "showRefreshButton": true,
+                            "showExportToExcel": true,
+                            "queryType": 1,
+                            "resourceType": "microsoft.resourcegraph/resources",
+                            "crossComponentResources": [
+                                "{Subscriptions}"
+                            ],
+                            "gridSettings": {
+                                "formatters": [
+                                    {
+                                        "columnMatch": "$gen_group",
+                                        "formatter": 15,
+                                        "formatOptions": {
+                                            "linkTarget": null,
+                                            "showIcon": true
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "subscriptionId",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "id",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "name",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "extensionType",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "publisher",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "Details",
+                                        "formatter": 7,
+                                        "formatOptions": {
+                                            "linkTarget": "GenericDetails",
+                                            "linkIsContextBlade": true
+                                        },
+                                        "tooltipFormat": {
+                                            "tooltip": "Click on the link for detailed information about this Virtual Machine."
+                                        }
+                                    }
+                                ],
+                                "rowLimit": 1000,
+                                "filter": true,
+                                "hierarchySettings": {
+                                    "treeType": 1,
+                                    "groupBy": [
+                                        "subscriptionId"
+                                    ],
+                                    "expandTopLevel": true
+                                },
+                                "labelSettings": [
+                                    {
+                                        "columnId": "subscriptionId",
+                                        "label": "Subscription"
+                                    },
+                                    {
+                                        "columnId": "id",
+                                        "label": "Extension Id"
+                                    },
+                                    {
+                                        "columnId": "resId",
+                                        "label": "Virtual Machine"
+                                    },
+                                    {
+                                        "columnId": "vmName",
+                                        "label": "Computer Name"
+                                    },
+                                    {
+                                        "columnId": "name",
+                                        "label": "Extension Name"
+                                    },
+                                    {
+                                        "columnId": "resourceGroup",
+                                        "label": "Resource Group"
+                                    },
+                                    {
+                                        "columnId": "extensionType",
+                                        "label": "Extension Type"
+                                    },
+                                    {
+                                        "columnId": "autoUpgradeEnabled",
+                                        "label": "DSC Extension Auto Upgrade "
+                                    },
+                                    {
+                                        "columnId": "publisher",
+                                        "label": "Publisher"
+                                    }
+                                ]
+                            }
+                        },
+                        "showPin": true,
+                        "name": "DSC_AzureVM",
+                        "styleSettings": {
+                            "showBorder": true
+                        }
+                    }
+                ]
+            },
+            "conditionalVisibility": {
+                "parameterName": "selectedTab",
+                "comparison": "isEqualTo",
+                "value": "AzVm"
+            },
+            "name": "grp_AzVm",
+            "styleSettings": {
+                "showBorder": true
+            }
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "Heartbeat\r\n| where OSType == \"Linux\"\r\n| where ComputerEnvironment != \"Azure\"\r\n| where ResourceProvider != 'Microsoft.ContainerService'\r\n| summarize arg_max(TimeGenerated,*) by Computer\r\n| extend Version = tostring(split(Version,\"-\")[0])\r\n| extend isVersion = parse_version(Version)\r\n| extend isImpacted = iif(parse_version(Version) <=  parse_version('1.13.39'), \"Yes\", \"No\")\r\n| join kind=leftouter (\r\n    ConfigurationData\r\n    | where ConfigDataType == \"Software\"\r\n    | summarize arg_max(TimeGenerated, *) by Computer, SoftwareName\r\n    | where SoftwareName contains \"omi\"\r\n    | extend omiImpacted = iif(parse_version(CurrentVersion) <=  parse_version('1.6.8.0'), \"Yes\", \"No\")\r\n    | project _ResourceId, Computer, omiImpacted, SoftwareType, SoftwareName, CurrentVersion, Publisher\r\n    ) on Computer\r\n| extend Computer = strcat('🖥️ ', Computer)\r\n| project TimeGenerated, Computer, isImpacted, omiImpacted, SubscriptionId, Version, Category, OSName, OsVersion = strcat(OSMajorVersion,\".\",OSMinorVersion), SoftwareName, CurrentVersion, SoftwareType, Publisher, Details = \"Click for more details ...\"\r\n| sort by TimeGenerated desc, Version desc\r\n",
+                            "size": 0,
+                            "title": "Linux non-Azure VMs with OmsAgentForLinux agent.",
+                            "timeContext": {
+                                "durationMs": 0
+                            },
+                            "timeContextFromParameter": "TimeRange",
+                            "showRefreshButton": true,
+                            "showExportToExcel": true,
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "crossComponentResources": [
+                                "{Workspaces}"
+                            ],
+                            "gridSettings": {
+                                "formatters": [
+                                    {
+                                        "columnMatch": "$gen_group",
+                                        "formatter": 13,
+                                        "formatOptions": {
+                                            "linkTarget": null,
+                                            "showIcon": true
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "TimeGenerated",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "24.2857ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "isImpacted",
+                                        "formatter": 18,
+                                        "formatOptions": {
+                                            "thresholdsOptions": "colors",
+                                            "thresholdsGrid": [
+                                                {
+                                                    "operator": "==",
+                                                    "thresholdValue": "Yes",
+                                                    "representation": "red",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
+                                                    "operator": "Default",
+                                                    "thresholdValue": null,
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                }
+                                            ],
+                                            "customColumnWidthSetting": "20.4286ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "omiImpacted",
+                                        "formatter": 18,
+                                        "formatOptions": {
+                                            "thresholdsOptions": "colors",
+                                            "thresholdsGrid": [
+                                                {
+                                                    "operator": "==",
+                                                    "thresholdValue": "Yes",
+                                                    "representation": "redBright",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
+                                                    "operator": "Default",
+                                                    "thresholdValue": null,
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                }
+                                            ],
+                                            "customColumnWidthSetting": "18.2857ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "SubscriptionId",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "Version",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "20.4286ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "Category",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "OSName",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "OsVersion",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "SoftwareName",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "CurrentVersion",
+                                        "formatter": 0,
+                                        "formatOptions": {
+                                            "customColumnWidthSetting": "23.2857ch"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "SoftwareType",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "Publisher",
+                                        "formatter": 5
+                                    },
+                                    {
+                                        "columnMatch": "Details",
+                                        "formatter": 7,
+                                        "formatOptions": {
+                                            "linkTarget": "GenericDetails",
+                                            "linkIsContextBlade": true
+                                        },
+                                        "tooltipFormat": {
+                                            "tooltip": "Click on the link for detailed information about this Virtual Machine."
+                                        }
+                                    }
+                                ],
+                                "rowLimit": 1000,
+                                "filter": true,
+                                "hierarchySettings": {
+                                    "treeType": 1,
+                                    "groupBy": [
+                                        "SubscriptionId"
+                                    ],
+                                    "expandTopLevel": true
+                                },
+                                "labelSettings": [
+                                    {
+                                        "columnId": "TimeGenerated",
+                                        "label": "Time Generated"
+                                    },
+                                    {
+                                        "columnId": "Computer",
+                                        "label": "Computer Name"
+                                    },
+                                    {
+                                        "columnId": "isImpacted",
+                                        "label": "MMA Vulnerable"
+                                    },
+                                    {
+                                        "columnId": "omiImpacted",
+                                        "label": "OMI Vulnerable"
+                                    },
+                                    {
+                                        "columnId": "SubscriptionId",
+                                        "label": "Subscription"
+                                    },
+                                    {
+                                        "columnId": "Version",
+                                        "label": "MMA Agent Version"
+                                    },
+                                    {
+                                        "columnId": "Category"
+                                    },
+                                    {
+                                        "columnId": "OSName",
+                                        "label": "O.S. Name"
+                                    },
+                                    {
+                                        "columnId": "OsVersion",
+                                        "label": "O.S. Version"
+                                    },
+                                    {
+                                        "columnId": "SoftwareName",
+                                        "label": "Software Name"
+                                    },
+                                    {
+                                        "columnId": "CurrentVersion",
+                                        "label": "OMI Current Version"
+                                    },
+                                    {
+                                        "columnId": "SoftwareType",
+                                        "label": "Software Type"
+                                    },
+                                    {
+                                        "columnId": "Publisher"
+                                    },
+                                    {
+                                        "columnId": "Details"
+                                    }
+                                ]
+                            }
+                        },
+                        "showPin": true,
+                        "name": "Linux_HybridVM",
+                        "styleSettings": {
+                            "showBorder": true
+                        }
+                    }
+                ]
+            },
+            "conditionalVisibility": {
+                "parameterName": "selectedTab",
+                "comparison": "isEqualTo",
+                "value": "Non-AzVm"
+            },
+            "name": "grp_Non-AzVm"
+        }
+    ],
+    "fallbackResourceIds": [
+        "Azure Monitor"
+    ],
+    "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

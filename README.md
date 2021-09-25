@@ -19,6 +19,7 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 | Description  | Link |
 | ------------- | ------------- |
 | Create a [Azure Monitor Workbook](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/workbooks-overview?WT.mc_id=AZ-MVP-5003548) | [workbooks](Create-AzWorkbookNetwork) |
+| Create an [Azure Monitor Workbook for OMI Vulnerabilities Rapid Check](https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/azure-monitor-omi-vulnerabilities-rapid-check-workbook/ba-p/2779755?WT.mc_id=AZ-MVP-5003548) | [omi-workbook](Create-AzWorkbookOmiVulnerabilities) |
 
 
 
