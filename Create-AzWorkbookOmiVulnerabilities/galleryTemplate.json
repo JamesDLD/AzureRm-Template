@@ -129,6 +129,19 @@
                         }
                     },
                     {
+                        "id": "a7a11882-80dd-49a3-974b-827ffdf36a3d",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "ChangeTrackingEnabled",
+                        "label": "Change Tracking Enabled",
+                        "type": 10,
+                        "isRequired": true,
+                        "value": "0",
+                        "typeSettings": {
+                            "additionalResourceOptions": []
+                        },
+                        "jsonData": "[\r\n    { \"value\":\"1\", \"label\":\"True\", \"selected\":true },\r\n    { \"value\":\"0\", \"label\":\"False\", \"selected\":false }\r\n]"
+                    },
+                    {
                         "id": "d4354e02-6b2e-41be-b23d-16d8e6292b67",
                         "version": "KqlParameterItem/1.0",
                         "name": "Help",
@@ -145,18 +158,72 @@
                         },
                         "timeContextFromParameter": "TimeRange",
                         "value": "Yes"
+                    },
+                    {
+                        "id": "1b98e4b4-5fce-4769-b732-913c64be9201",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "finalQuery",
+                        "type": 1,
+                        "isHiddenWhenLocked": true,
+                        "criteriaData": [
+                            {
+                                "criteriaContext": {
+                                    "leftOperand": "ChangeTrackingEnabled",
+                                    "operator": "==",
+                                    "rightValType": "static",
+                                    "rightVal": "1",
+                                    "resultValType": "static",
+                                    "resultVal": "Heartbeat | where OSType == \"Linux\" | where ComputerEnvironment == \"Azure\" | summarize arg_max(TimeGenerated,*) by Computer | extend Version = tostring(split(Version,\"-\")[0]) | extend isImpacted = iif(parse_version(Version) <= parse_version(\"1.13.39\"), \"Yes\", \"No\") | join kind=leftouter(     ConfigurationData     | where ConfigDataType == \"Software\"     | summarize arg_max(TimeGenerated, *) by Computer, SoftwareName     | where SoftwareName startswith \"omi\"     | extend omiImpacted = iif(parse_version(CurrentVersion) <=  parse_version(\"1.6.8.0\"), \"Yes\", \"No\")     | project _ResourceId, Computer, omiImpacted, SoftwareType, SoftwareName, CurrentVersion, Publisher     ) on _ResourceId | extend _ResourceId == tolower(_ResourceId) | project TimeGenerated, _ResourceId, Subscription=SubscriptionId, ResourceGroup, Computer, Version, isImpacted, Category, OSName, OsVersion = strcat(OSMajorVersion,\".\",OSMinorVersion), SoftwareType, SoftwareName, CurrentVersion, omiImpacted, Publisher, Details = \"Click for more details ...\" | sort by TimeGenerated desc, Version desc"
+                                }
+                            },
+                            {
+                                "criteriaContext": {
+                                    "operator": "Default",
+                                    "rightValType": "param",
+                                    "resultValType": "static",
+                                    "resultVal": "Heartbeat | where OSType == \"Linux\" | where ComputerEnvironment == \"Azure\" | summarize arg_max(TimeGenerated,*) by Computer | extend Version = tostring(split(Version,\"-\")[0]) | extend isImpacted = iif(parse_version(Version) <= parse_version(\"1.13.39\"), \"Yes\", \"No\") | extend _ResourceId == tolower(_ResourceId) | project TimeGenerated, _ResourceId, Subscription=SubscriptionId, ResourceGroup, Computer, Version, isImpacted, Category, OSName, OsVersion = strcat(OSMajorVersion,\".\",OSMinorVersion), SoftwareType=\"\", SoftwareName=\"\", CurrentVersion=\"\", omiImpacted=\"\", Publisher=\"\", Details = \"Click for more details ...\" | sort by TimeGenerated desc, Version desc"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": "2895800c-5c99-4078-a6c5-e973b4c53b58",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "finalQueryNonAz",
+                        "type": 1,
+                        "isHiddenWhenLocked": true,
+                        "criteriaData": [
+                            {
+                                "criteriaContext": {
+                                    "leftOperand": "ChangeTrackingEnabled",
+                                    "operator": "==",
+                                    "rightValType": "static",
+                                    "rightVal": "1",
+                                    "resultValType": "static",
+                                    "resultVal": "Heartbeat | where OSType == \"Linux\" | where ComputerEnvironment != \"Azure\" | where ResourceProvider != \"Microsoft.ContainerService\" | summarize arg_max(TimeGenerated,*) by Computer | extend Version = tostring(split(Version,\"-\")[0]) | extend isVersion = parse_version(Version) | extend isImpacted = iif(parse_version(Version) <= parse_version(\"1.13.39\"), \"Yes\", \"No\") | join kind=leftouter (     ConfigurationData     | where ConfigDataType == \"Software\"     | summarize arg_max(TimeGenerated, *) by Computer, SoftwareName     | where SoftwareName contains \"omi\"     | extend omiImpacted = iif(parse_version(CurrentVersion) <= parse_version(\"1.6.8.0\"), \"Yes\", \"No\")     | project _ResourceId, Computer, omiImpacted, SoftwareType, SoftwareName, CurrentVersion, Publisher     ) on Computer | extend Computer = strcat(\"🖥️ \", Computer) | project TimeGenerated, Computer, isImpacted, omiImpacted, SubscriptionId, Version, Category, OSName, OsVersion = strcat(OSMajorVersion,\".\",OSMinorVersion), SoftwareName, CurrentVersion, SoftwareType, Publisher, Details = \"Click for more details ...\" | sort by TimeGenerated desc, Version desc"
+                                }
+                            },
+                            {
+                                "criteriaContext": {
+                                    "operator": "Default",
+                                    "rightValType": "param",
+                                    "resultValType": "static",
+                                    "resultVal": "Heartbeat | where OSType == \"Linux\" | where ComputerEnvironment != \"Azure\" | where ResourceProvider != \"Microsoft.ContainerService\" | summarize arg_max(TimeGenerated,*) by Computer | extend Version = tostring(split(Version,\"-\")[0]) | extend isVersion = parse_version(Version) | extend isImpacted = iif(parse_version(Version) <= parse_version(\"1.13.39\"), \"Yes\", \"No\") | extend Computer = strcat(\"🖥️ \", Computer) | project TimeGenerated, Computer, isImpacted, omiImpacted=\"\", SubscriptionId, Version, Category, OSName, OsVersion = strcat(OSMajorVersion,\".\",OSMinorVersion), SoftwareName=\"\", CurrentVersion=\"\", SoftwareType=\"\", Publisher=\"\", Details = \"Click for more details ...\" | sort by TimeGenerated desc, Version desc"
+                                }
+                            }
+                        ]
                     }
                 ],
                 "style": "pills",
                 "queryType": 0,
-                "resourceType": "microsoft.resourcegraph/resources"
+                "resourceType": "microsoft.operationalinsights/workspaces"
             },
             "name": "Parameters"
         },
         {
             "type": 1,
             "content": {
-                "json": ">**Author**\r\n>[Bruno Gabrielli](mailto:bruno.gabrielli@microsoft.com)\r\n>\r\n>**Version 1.7**\r\n>2021-09-24\r\n>- Added exclusion for the *Microsoft.ContainerService* resources in the **Linux non-Azure VMs with OmsAgentForLinux agent.** tile\r\n>\r\n>**Version 1.6**\r\n>2021-09-24\r\n>- Added the search box to the **Linux Azure VMs with OmsAgentForLinux agent.** tile\r\n>\r\n>**Version 1.5**\r\n>2021-09-23\r\n>- Implemented tabbing to differentiate Azure e non-Azure reources\r\n>- Added tile to list Azure VM with MMA agent software a not the extension\r\n>- Restored and completed the Azure Vm DSC tile\r\n>\r\n>**Version 1.4**\r\n>2021-09-22\r\n>- Fixed some cosmetics\r\n>- Hidden the Azure Vm DSC tile, since I can't repro any query result for further analysis\r\n>- Renamed to be just ***OMI Vulnerabilities - Rapid Check***\r\n>\r\n>**Version 1.3**\r\n>2021-09-22\r\n>- Added the tiles for:\r\n>\t- *Linux Diagnostic Extension (LAD)*\r\n>\t- *Desired State Configuration (DSC)*\r\n>\r\n>**Version 1.2**\r\n>2021-09-21\r\n>- Added the _microsoft.hybridcompute/machines/extensions_ provider to include **Azure Arc** machines\r\n>\r\n>**Version 1.1**\r\n>2021-09-21\r\n>- Bugfix and column labelling.\r\n>\r\n>**Version 1.0**\r\n>2021-09-18\r\n>- Initial version."
+                "json": ">**Author**\r\n>[Bruno Gabrielli](mailto:bruno.gabrielli@microsoft.com)\r\n>\r\n>**Version 1.8**\r\n>2021-09-27\r\n>- Added parameter to run specific query if the *ChangeTracking* solution is in use\r\n>- Fixed issue with missing *ConfigurationData* table due to not using ChangeTracking solution which is optional for this workbook to run\r\n>\r\n>**Version 1.7**\r\n>2021-09-24\r\n>- Added exclusion for the *Microsoft.ContainerService* resources in the **Linux non-Azure VMs with OmsAgentForLinux agent.** tile\r\n>\r\n>**Version 1.6**\r\n>2021-09-24\r\n>- Added the search box to the **Linux Azure VMs with OmsAgentForLinux agent.** tile\r\n>\r\n>**Version 1.5**\r\n>2021-09-23\r\n>- Implemented tabbing to differentiate Azure e non-Azure reources\r\n>- Added tile to list Azure VM with MMA agent software a not the extension\r\n>- Restored and completed the Azure Vm DSC tile\r\n>\r\n>**Version 1.4**\r\n>2021-09-22\r\n>- Fixed some cosmetics\r\n>- Hidden the Azure Vm DSC tile, since I can't repro any query result for further analysis\r\n>- Renamed to be just ***OMI Vulnerabilities - Rapid Check***\r\n>\r\n>**Version 1.3**\r\n>2021-09-22\r\n>- Added the tiles for:\r\n>\t- *Linux Diagnostic Extension (LAD)*\r\n>\t- *Desired State Configuration (DSC)*\r\n>\r\n>**Version 1.2**\r\n>2021-09-21\r\n>- Added the _microsoft.hybridcompute/machines/extensions_ provider to include **Azure Arc** machines\r\n>\r\n>**Version 1.1**\r\n>2021-09-21\r\n>- Bugfix and column labelling.\r\n>\r\n>**Version 1.0**\r\n>2021-09-18\r\n>- Initial version."
             },
             "conditionalVisibility": {
                 "parameterName": "Help",
@@ -241,10 +308,10 @@
                         "type": 3,
                         "content": {
                             "version": "KqlItem/1.0",
-                            "query": "Heartbeat\r\n| where OSType == \"Linux\"\r\n| where ComputerEnvironment ==  \"Azure\"\r\n| summarize arg_max(TimeGenerated,*) by Computer\r\n| extend Version = tostring(split(Version,\"-\")[0])\r\n| extend isImpacted = iif(parse_version(Version) <=  parse_version('1.13.39'), \"Yes\", \"No\")\r\n| join kind=leftouter(\r\n    ConfigurationData\r\n    | where ConfigDataType == \"Software\"\r\n    | summarize arg_max(TimeGenerated, *) by Computer, SoftwareName\r\n    | where SoftwareName startswith \"omi\"\r\n    | extend omiImpacted = iif(parse_version(CurrentVersion) <=  parse_version('1.6.8.0'), \"Yes\", \"No\")\r\n    | project _ResourceId, Computer, omiImpacted, SoftwareType, SoftwareName, CurrentVersion, Publisher\r\n    ) on _ResourceId\r\n| extend _ResourceId == tolower(_ResourceId)\r\n| project TimeGenerated, _ResourceId, Subscription=SubscriptionId, ResourceGroup, Computer, Version, isImpacted, Category, OSName, OsVersion = strcat(OSMajorVersion,\".\",OSMinorVersion), SoftwareType, SoftwareName, CurrentVersion, omiImpacted, Publisher, Details = \"Click for more details ...\"\r\n| sort by TimeGenerated desc, Version desc",
+                            "query": "//print '({finalQuery:value})'\r\n{finalQuery:value}",
                             "size": 0,
                             "timeContext": {
-                                "durationMs": 604800000
+                                "durationMs": 0
                             },
                             "timeContextFromParameter": "TimeRange",
                             "queryType": 0,
@@ -268,7 +335,7 @@
                         "type": 3,
                         "content": {
                             "version": "KqlItem/1.0",
-                            "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"af570914-a0ef-42c0-8e2b-13011b85a066\",\"mergeType\":\"innerunique\",\"leftTable\":\"argQuery\",\"rightTable\":\"kustoQuery\",\"leftColumn\":\"resId\",\"rightColumn\":\"_ResourceId\"}],\"projectRename\":[{\"originalName\":\"[kustoQuery].TimeGenerated\",\"mergedName\":\"TimeGenerated\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery]._ResourceId\",\"mergedName\":\"_ResourceId\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].Computer\",\"mergedName\":\"Computer\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].resourceGroup\",\"mergedName\":\"resourceGroup\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].isImpacted\",\"mergedName\":\"isImpacted\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].omiImpacted\",\"mergedName\":\"omiImpacted\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Version\",\"mergedName\":\"Version\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].autoUpgradeEnabled\",\"mergedName\":\"autoUpgradeEnabled\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Category\",\"mergedName\":\"Category\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].CurrentVersion\",\"mergedName\":\"CurrentVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSName\",\"mergedName\":\"OSName\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SoftwareName\",\"mergedName\":\"SoftwareName\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SoftwareType\",\"mergedName\":\"SoftwareType\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Publisher\",\"mergedName\":\"Publisher\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Details\",\"mergedName\":\"Details\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SubscriptionId\",\"mergedName\":\"SubscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[argQuery].id\"},{\"originalName\":\"[argQuery].resId\"},{\"originalName\":\"[argQuery].vmName\"},{\"originalName\":\"[argQuery].name\"},{\"originalName\":\"[argQuery].properties_publisher\"},{\"originalName\":\"[argQuery].Pippo\"},{\"originalName\":\"[argQuery].properties_autoUpgradeMinorVersion\"},{\"originalName\":\"[kustoQuery].Subscription\"},{\"originalName\":\"[kustoQuery].ResourceGroup\"}]}",
+                            "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"af570914-a0ef-42c0-8e2b-13011b85a066\",\"mergeType\":\"innerunique\",\"leftTable\":\"argQuery\",\"rightTable\":\"kustoQuery\",\"leftColumn\":\"resId\",\"rightColumn\":\"_ResourceId\"}],\"projectRename\":[{\"originalName\":\"[kustoQuery].TimeGenerated\",\"mergedName\":\"TimeGenerated\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery]._ResourceId\",\"mergedName\":\"_ResourceId\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].Computer\",\"mergedName\":\"Computer\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].resourceGroup\",\"mergedName\":\"resourceGroup\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].isImpacted\",\"mergedName\":\"isImpacted\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].omiImpacted\",\"mergedName\":\"omiImpacted\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Version\",\"mergedName\":\"Version\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].autoUpgradeEnabled\",\"mergedName\":\"autoUpgradeEnabled\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Category\",\"mergedName\":\"Category\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[argQuery].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"af570914-a0ef-42c0-8e2b-13011b85a066\"},{\"originalName\":\"[kustoQuery].CurrentVersion\",\"mergedName\":\"CurrentVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSName\",\"mergedName\":\"OSName\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SoftwareName\",\"mergedName\":\"SoftwareName\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SoftwareType\",\"mergedName\":\"SoftwareType\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Publisher\",\"mergedName\":\"Publisher\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Details\",\"mergedName\":\"Details\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SubscriptionId\",\"mergedName\":\"SubscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].TenantId\",\"mergedName\":\"TenantId\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SourceSystem\",\"mergedName\":\"SourceSystem\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].MG\",\"mergedName\":\"MG\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ManagementGroupName\",\"mergedName\":\"ManagementGroupName\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SourceComputerId\",\"mergedName\":\"SourceComputerId\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ComputerIP\",\"mergedName\":\"ComputerIP\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSMajorVersion\",\"mergedName\":\"OSMajorVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSMinorVersion\",\"mergedName\":\"OSMinorVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SCAgentChannel\",\"mergedName\":\"SCAgentChannel\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].IsGatewayInstalled\",\"mergedName\":\"IsGatewayInstalled\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].RemoteIPLongitude\",\"mergedName\":\"RemoteIPLongitude\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].RemoteIPLatitude\",\"mergedName\":\"RemoteIPLatitude\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].RemoteIPCountry\",\"mergedName\":\"RemoteIPCountry\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceProvider\",\"mergedName\":\"ResourceProvider\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Resource\",\"mergedName\":\"Resource\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceId\",\"mergedName\":\"ResourceId\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceType\",\"mergedName\":\"ResourceType\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ComputerEnvironment\",\"mergedName\":\"ComputerEnvironment\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Solutions\",\"mergedName\":\"Solutions\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].VMUUID\",\"mergedName\":\"VMUUID\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ComputerPrivateIPs\",\"mergedName\":\"ComputerPrivateIPs\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Type\",\"mergedName\":\"Type\",\"fromId\":\"unknown\"},{\"originalName\":\"[argQuery].id\"},{\"originalName\":\"[argQuery].resId\"},{\"originalName\":\"[argQuery].vmName\"},{\"originalName\":\"[argQuery].name\"},{\"originalName\":\"[argQuery].properties_publisher\"},{\"originalName\":\"[argQuery].Pippo\"},{\"originalName\":\"[argQuery].properties_autoUpgradeMinorVersion\"},{\"originalName\":\"[kustoQuery].Subscription\"},{\"originalName\":\"[kustoQuery].ResourceGroup\"}]}",
                             "size": 0,
                             "title": "Linux Azure VMs with OmsAgentForLinux extension.",
                             "showRefreshButton": true,
@@ -344,9 +411,14 @@
                                                     "text": "{0}{1}"
                                                 },
                                                 {
+                                                    "operator": "==",
+                                                    "thresholdValue": "No",
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
                                                     "operator": "Default",
                                                     "thresholdValue": null,
-                                                    "representation": "green",
                                                     "text": "{0}{1}"
                                                 }
                                             ],
@@ -439,7 +511,7 @@
                                     },
                                     {
                                         "columnId": "isImpacted",
-                                        "label": "MMA Vulnerable"
+                                        "label": "Monitoring Extension Vulnerable"
                                     },
                                     {
                                         "columnId": "omiImpacted",
@@ -469,23 +541,19 @@
                                         "label": "O.S. Name"
                                     },
                                     {
-                                        "columnId": "OsVersion",
-                                        "label": "O.S. Version"
+                                        "columnId": "OsVersion"
                                     },
                                     {
-                                        "columnId": "SoftwareName",
-                                        "label": "Software Name"
+                                        "columnId": "SoftwareName"
                                     },
                                     {
-                                        "columnId": "SoftwareType",
-                                        "label": "Software Type"
+                                        "columnId": "SoftwareType"
                                     },
                                     {
                                         "columnId": "Publisher"
                                     },
                                     {
-                                        "columnId": "Details",
-                                        "label": ""
+                                        "columnId": "Details"
                                     }
                                 ]
                             }
@@ -499,7 +567,7 @@
                         "type": 3,
                         "content": {
                             "version": "KqlItem/1.0",
-                            "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\",\"mergeType\":\"rightanti\",\"leftTable\":\"argQuery\",\"rightTable\":\"kustoQuery\",\"leftColumn\":\"resId\",\"rightColumn\":\"_ResourceId\"}],\"projectRename\":[{\"originalName\":\"[kustoQuery].TimeGenerated\",\"mergedName\":\"TimeGenerated\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery]._ResourceId\",\"mergedName\":\"_ResourceId\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Computer\",\"mergedName\":\"Computer\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Version\",\"mergedName\":\"Version\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].isImpacted\",\"mergedName\":\"isImpacted\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Category\",\"mergedName\":\"Category\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].OSName\",\"mergedName\":\"OSName\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].SoftwareType\",\"mergedName\":\"SoftwareType\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].SoftwareName\",\"mergedName\":\"SoftwareName\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].CurrentVersion\",\"mergedName\":\"CurrentVersion\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].omiImpacted\",\"mergedName\":\"omiImpacted\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Publisher\",\"mergedName\":\"Publisher\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Details\",\"mergedName\":\"Details\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Subscription\",\"mergedName\":\"Subscription\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceGroup\",\"mergedName\":\"ResourceGroup\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SubscriptionId\"}]}",
+                            "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\",\"mergeType\":\"rightanti\",\"leftTable\":\"argQuery\",\"rightTable\":\"kustoQuery\",\"leftColumn\":\"resId\",\"rightColumn\":\"_ResourceId\"}],\"projectRename\":[{\"originalName\":\"[kustoQuery].TimeGenerated\",\"mergedName\":\"TimeGenerated\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery]._ResourceId\",\"mergedName\":\"_ResourceId\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Computer\",\"mergedName\":\"Computer\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].isImpacted\",\"mergedName\":\"isImpacted\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].omiImpacted\",\"mergedName\":\"omiImpacted\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Version\",\"mergedName\":\"Version\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Category\",\"mergedName\":\"Category\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].OSName\",\"mergedName\":\"OSName\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].SoftwareType\",\"mergedName\":\"SoftwareType\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].SoftwareName\",\"mergedName\":\"SoftwareName\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].CurrentVersion\",\"mergedName\":\"CurrentVersion\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Publisher\",\"mergedName\":\"Publisher\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Details\",\"mergedName\":\"Details\",\"fromId\":\"d926d128-82a0-49da-8ac6-4fdf65eec09f\"},{\"originalName\":\"[kustoQuery].Subscription\",\"mergedName\":\"Subscription\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceGroup\",\"mergedName\":\"ResourceGroup\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].TenantId\",\"mergedName\":\"TenantId\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SourceSystem\",\"mergedName\":\"SourceSystem\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].MG\",\"mergedName\":\"MG\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ManagementGroupName\",\"mergedName\":\"ManagementGroupName\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SourceComputerId\",\"mergedName\":\"SourceComputerId\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ComputerIP\",\"mergedName\":\"ComputerIP\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSMajorVersion\",\"mergedName\":\"OSMajorVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].OSMinorVersion\",\"mergedName\":\"OSMinorVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SCAgentChannel\",\"mergedName\":\"SCAgentChannel\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].IsGatewayInstalled\",\"mergedName\":\"IsGatewayInstalled\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].RemoteIPLongitude\",\"mergedName\":\"RemoteIPLongitude\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].RemoteIPLatitude\",\"mergedName\":\"RemoteIPLatitude\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].RemoteIPCountry\",\"mergedName\":\"RemoteIPCountry\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceProvider\",\"mergedName\":\"ResourceProvider\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Resource\",\"mergedName\":\"Resource\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceId\",\"mergedName\":\"ResourceId\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ResourceType\",\"mergedName\":\"ResourceType\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ComputerEnvironment\",\"mergedName\":\"ComputerEnvironment\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Solutions\",\"mergedName\":\"Solutions\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].VMUUID\",\"mergedName\":\"VMUUID\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].ComputerPrivateIPs\",\"mergedName\":\"ComputerPrivateIPs\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].Type\",\"mergedName\":\"Type\",\"fromId\":\"unknown\"},{\"originalName\":\"[kustoQuery].SubscriptionId\"}]}",
                             "size": 0,
                             "title": "Linux Azure VMs with OmsAgentForLinux agent.",
                             "showRefreshButton": true,
@@ -598,9 +666,14 @@
                                                     "text": "{0}{1}"
                                                 },
                                                 {
+                                                    "operator": "==",
+                                                    "thresholdValue": "No",
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
                                                     "operator": "Default",
                                                     "thresholdValue": null,
-                                                    "representation": "green",
                                                     "text": "{0}{1}"
                                                 }
                                             ],
@@ -669,12 +742,16 @@
                                         "label": "Computer Name"
                                     },
                                     {
-                                        "columnId": "Version",
-                                        "label": "Agent Extension version"
-                                    },
-                                    {
                                         "columnId": "isImpacted",
                                         "label": "MMA Vulnerable"
+                                    },
+                                    {
+                                        "columnId": "omiImpacted",
+                                        "label": "OMI Vulnerable"
+                                    },
+                                    {
+                                        "columnId": "Version",
+                                        "label": "Agent Extension version"
                                     },
                                     {
                                         "columnId": "Category"
@@ -698,10 +775,6 @@
                                     {
                                         "columnId": "CurrentVersion",
                                         "label": "OMI Current Version"
-                                    },
-                                    {
-                                        "columnId": "omiImpacted",
-                                        "label": "OMI Vulnerable"
                                     },
                                     {
                                         "columnId": "Publisher"
@@ -984,7 +1057,7 @@
                         "type": 3,
                         "content": {
                             "version": "KqlItem/1.0",
-                            "query": "Heartbeat\r\n| where OSType == \"Linux\"\r\n| where ComputerEnvironment != \"Azure\"\r\n| where ResourceProvider != 'Microsoft.ContainerService'\r\n| summarize arg_max(TimeGenerated,*) by Computer\r\n| extend Version = tostring(split(Version,\"-\")[0])\r\n| extend isVersion = parse_version(Version)\r\n| extend isImpacted = iif(parse_version(Version) <=  parse_version('1.13.39'), \"Yes\", \"No\")\r\n| join kind=leftouter (\r\n    ConfigurationData\r\n    | where ConfigDataType == \"Software\"\r\n    | summarize arg_max(TimeGenerated, *) by Computer, SoftwareName\r\n    | where SoftwareName contains \"omi\"\r\n    | extend omiImpacted = iif(parse_version(CurrentVersion) <=  parse_version('1.6.8.0'), \"Yes\", \"No\")\r\n    | project _ResourceId, Computer, omiImpacted, SoftwareType, SoftwareName, CurrentVersion, Publisher\r\n    ) on Computer\r\n| extend Computer = strcat('🖥️ ', Computer)\r\n| project TimeGenerated, Computer, isImpacted, omiImpacted, SubscriptionId, Version, Category, OSName, OsVersion = strcat(OSMajorVersion,\".\",OSMinorVersion), SoftwareName, CurrentVersion, SoftwareType, Publisher, Details = \"Click for more details ...\"\r\n| sort by TimeGenerated desc, Version desc\r\n",
+                            "query": "//print '({finalQueryNonAz:value})'\r\n{finalQueryNonAz:value}",
                             "size": 0,
                             "title": "Linux non-Azure VMs with OmsAgentForLinux agent.",
                             "timeContext": {
@@ -1050,9 +1123,14 @@
                                                     "text": "{0}{1}"
                                                 },
                                                 {
+                                                    "operator": "==",
+                                                    "thresholdValue": "No",
+                                                    "representation": "green",
+                                                    "text": "{0}{1}"
+                                                },
+                                                {
                                                     "operator": "Default",
                                                     "thresholdValue": null,
-                                                    "representation": "green",
                                                     "text": "{0}{1}"
                                                 }
                                             ],
