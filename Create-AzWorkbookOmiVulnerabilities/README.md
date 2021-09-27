@@ -5,19 +5,15 @@ Related blog post
 [Azure Monitor - OMI Vulnerabilities Rapid Check Workbook](https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/azure-monitor-omi-vulnerabilities-rapid-check-workbook/ba-p/2779755?WT.mc_id=AZ-MVP-5003548).
 
 
-Deployment through the Portal
+Deployment using the Azure Portal
 ------------
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzWorkbookOmiVulnerabilities%2Ftemplate.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FJamesDLD%2FAzureRm-Template%2Fmaster%2FCreate-AzWorkbookOmiVulnerabilities%2Ftemplate.json" target="_blank">
-    <img src="http://armviz.io/visualizebutton.png"/>
-</a>
 
-
-Deployment through the PowerShell
+Deployment using PowerShell
 ------------
 
 ```ps
