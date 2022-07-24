@@ -38,7 +38,7 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 | Create a VM, with NSG on an existing Vnet/Subnet | [Microsoft.Compute/virtualMachines](Create-AzVm) |
 | Create Resource Group | [Microsoft.Resources/resourceGroups](Create-AzRg) |
 | Create an App Service plan, an App Service and its Private Endpoint | [Microsoft.Web/sites](Create-AzAppService) |
-| An Azure notification API for Slack, Office 365 with Azure Logic Apps | [Microsoft.Logic/workflows]Create-AzNotificationApi) |
+| An Azure notification API for Slack, Office 365 with Azure Logic Apps | [Microsoft.Logic/workflows](Create-AzNotificationApi) |
 
 
 # Azure Policy
