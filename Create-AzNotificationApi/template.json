@@ -1,0 +1,239 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "logicAppName": {
+            "defaultValue": "Notifications",
+            "type": "String",
+            "metadata": {
+                "description": "The logic app name"
+            }
+        },
+        "office365ConnectionName": {
+            "defaultValue": "office365",
+            "type": "String",
+            "metadata": {
+                "description": "Logic App Office 365 Connector name"
+            }
+        },
+        "slackConnectionName": {
+            "defaultValue": "slack",
+            "type": "String",
+            "metadata": {
+                "description": "Logic App Slack Connector name"
+            }
+        },
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('office365ConnectionName')]",
+            "location": "[parameters('location')]",
+            "kind": "V1",
+            "properties": {
+                "displayName": "Azure Logic Apps Office 365 Outlook connector: https://docs.microsoft.com/en-us/azure/connectors/connectors-create-api-office365-outlook?WT.mc_id=AZ-MVP-5003548",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/office365')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('slackConnectionName')]",
+            "location": "[parameters('location')]",
+            "kind": "V1",
+            "properties": {
+                "displayName": "Azure Logic Apps Slack connector: https://docs.microsoft.com/en-us/azure/connectors/connectors-create-api-slack?WT.mc_id=AZ-MVP-5003548",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/slack')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('logicAppName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', parameters('office365ConnectionName'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('slackConnectionName'))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "actions": {
+                        "Initialize_-_supportedTypes": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "supportedTypes",
+                                        "type": "array",
+                                        "value": [
+                                            "email",
+                                            "slack"
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        "Switch": {
+                            "runAfter": {
+                                "Initialize_-_supportedTypes": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "cases": {
+                                "Case_-_email": {
+                                    "case": "email",
+                                    "actions": {
+                                        "Response_200_-_email": {
+                                            "runAfter": {},
+                                            "type": "Response",
+                                            "kind": "Http",
+                                            "inputs": {
+                                                "body": "Email notification sent to [@{triggerBody()?['to']}].",
+                                                "statusCode": 200
+                                            }
+                                        },
+                                        "Send_an_email_(V2)": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "Body": "@{triggerBody()?['description']}",
+                                                    "Importance": "Normal",
+                                                    "Subject": "@triggerBody()?['title']",
+                                                    "To": "@triggerBody()?['to']"
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['office365']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/Mail"
+                                            }
+                                        }
+                                    }
+                                },
+                                "Case_-_slack": {
+                                    "case": "slack",
+                                    "actions": {
+                                        "Post_message_(V2)": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "channel": "@triggerBody()?['to']",
+                                                    "text": "*@{triggerBody()?['title']}*\n@{triggerBody()?['description']}"
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['slack']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/chat.postMessage"
+                                            }
+                                        },
+                                        "Response_200_-_slack": {
+                                            "runAfter": {},
+                                            "type": "Response",
+                                            "kind": "Http",
+                                            "inputs": {
+                                                "body": "Slack notification sent to [@{triggerBody()?['to']}].",
+                                                "statusCode": 200
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "default": {
+                                "actions": {
+                                    "Response_401_-_Wrong_type": {
+                                        "runAfter": {},
+                                        "type": "Response",
+                                        "kind": "Http",
+                                        "inputs": {
+                                            "body": "ERROR: type [@{triggerBody()?['type']}] not supported.",
+                                            "statusCode": 401
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": "@triggerBody()?['type']",
+                            "type": "Switch"
+                        }
+                    },
+                    "contentVersion": "1.0.0.0",
+                    "outputs": {},
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "to": {
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "office365": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('office365ConnectionName'))]",
+                                "connectionName": "office365",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/office365')]"
+                            },
+                            "azuremonitorlogs": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('slackConnectionName'))]",
+                                "connectionName": "slack",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/slack')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+    }
+}
