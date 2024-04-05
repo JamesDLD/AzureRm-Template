@@ -2,7 +2,7 @@
 
 Content
 ------------
-Complete details of this template are available in the following article [An Azure Logic Apps to automate Azure SQL Databases scaling](https://medium.com/@jamesdld23/xxxxxx).
+Full details of this ARM Template are available in the following article [An Azure Logic Apps to automate Azure SQL Databases scaling](https://medium.com/@jamesdld23/auto-scale-azure-sql-databases-with-azure-logic-apps-feeaeaf1e376).
 
 
 Deployment through the Portal
@@ -17,15 +17,15 @@ Deployment through the Portal
 </a>
 
 
-Deployment through the PowerShell
+Deployment through PowerShell
 ------------
 
 ```ps
 # Variables
-$AzureRmSubscriptionName = "mvp-sub1"
-$RgName = "infr-jdld-noprd-rg1"
-$UserAssignedIdentityName = "demo-sql-scaling-id"
-$SqlServerId = "/subscriptions/6094e15e-3e04-47b5-9b3b-aa8ae3cf1e52/resourceGroups/infr-hub-prd-rg2/providers/Microsoft.Sql/servers/demosqlautoscaling"
+$AzureRmSubscriptionName = "<yoursubid>"
+$RgName = "<rgname>"
+$UserAssignedIdentityName = "<identityname>"
+$SqlServerId = "/subscriptions/xxxxxxx-xxxxxxx-xxxxxxx-xxxxxxx-xxxxxxx/resourceGroups/rgname/providers/Microsoft.Sql/servers/yourserver"
 $templateUri = "https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzSqlDatabaseAutoScaling/template.json"
 
 # Action
@@ -37,37 +37,95 @@ Select-AzSubscription -Name $AzureRmSubscriptionName -Context $AzureRmContext -F
 $UserAssignedIdentity = New-AzUserAssignedIdentity -ResourceGroupName $RgName -Name $UserAssignedIdentityName
 
 ## Assign the role to the managed identity, for more information on this procedure you chec have a look on the following [reference](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell?WT.mc_id=AZ-MVP-5003548#step-4-assign-role).
-New-AzRoleAssignment -ObjectId $UserAssignedIdentity.PrincipalId -RoleDefinitionName "SQL Server Contributor" -Scope $SqlServerId
+New-AzRoleAssignment -ObjectId $UserAssignedIdentity.PrincipalId -RoleDefinitionName "SQL DB Contributor" -Scope $SqlServerId
 
-Write-Host "Deploying to the resource group : $RgName an Azure Logic App that will scale SQL Databasesss" -ForegroundColor Cyan
+## Deploy Azure Logic Apps
+Write-Host "Deploying to the resource group : $RgName Azure Logic Apps that will scale SQL Databases" -ForegroundColor Cyan
 
 $parameters = @{
     tags = @{
-        role = 'Auto scaling of Azure SQL Databases'
+        role = 'Scale down Azure SQL Databases'
     }
     userAssignedIdentityId = $UserAssignedIdentity.Id
-    logicAppName   = 'demologic01'
-    sqlServerId  = $SqlServerId
+    logicAppName = 'demo-scale-down-sql-logic'
+    sqlServerId = $SqlServerId
     desiredSkusPerDatabases = @{
         target = @(
-           @{
-               name = "DEMO"
-               sku = @{
-                   capacity = 5
-                   name = "Basic"
-                   tier = "Basic"
-               }
-           }
+        @{
+            name = "DEMO1"
+            sku = @{
+                capacity = 5
+                name = "Basic"
+                tier = "Basic"
+            }
+        }
+        @{
+            name = "DEMO2"
+            sku = @{
+                capacity = 5
+                name = "Basic"
+                tier = "Basic"
+            }
+        }
         )
+    }
+    recurrence = @{
+        frequency = "Week"
+        interval = 1
+        schedule = @{
+            hours = @("20")
+            minutes = @(0)
+            weekDays = @("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+        }
+        timeZone = "Romance Standard Time"
     }
 }
 
-New-AzResourceGroupDeployment -whatif -Name "SqlDatabaseAutoScaling" -ResourceGroupName $RgName `
+New-AzResourceGroupDeployment -Name "SqlDatabasesScaleDown" -ResourceGroupName $RgName `
   -TemplateFile ./template.json `
   -TemplateParameterObject $parameters
 
-New-AzResourceGroupDeployment -Name "SqlDatabaseAutoScaling" -ResourceGroupName $RgName `
+$parameters = @{
+    tags = @{
+        role = 'Scale up Azure SQL Databases'
+    }
+    userAssignedIdentityId = $UserAssignedIdentity.Id
+    logicAppName = 'demo-scale-up-sql-logic'
+    sqlServerId = $SqlServerId
+    desiredSkusPerDatabases = @{
+        target = @(
+        @{
+            name = "DEMO1"
+            sku = @{
+                capacity = 20
+                name = "Standard"
+                tier = "Standard"
+            }
+        }
+        @{
+            name = "DEMO2"
+            sku = @{
+                capacity = 20
+                name = "Standard"
+                tier = "Standard"
+            }
+        }
+        )
+    }
+    recurrence = @{
+        frequency = "Week"
+        interval = 1
+        schedule = @{
+            hours = @("8")
+            minutes = @(0)
+            weekDays = @("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+        }
+        timeZone = "Romance Standard Time"
+    }
+}
+
+New-AzResourceGroupDeployment -Name "SqlDatabasesScaleUp" -ResourceGroupName $RgName `
   -TemplateFile ./template.json `
-  -TemplateParameterObject $parameters `
-  -Confirm -ErrorAction Stop
+  -TemplateParameterObject $parameters
+
 ```
