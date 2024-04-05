@@ -1,5 +1,5 @@
 # Compiled files
-#N/A
+.idea/
 
 # Log directory
 Trash/
@@ -8,4 +8,3 @@ misc/
 # Secret files
 Deploy.ps1
 parameters-true.json
-

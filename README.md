@@ -39,6 +39,7 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 | Create Resource Group | [Microsoft.Resources/resourceGroups](Create-AzRg) |
 | Create an App Service plan, an App Service and its Private Endpoint | [Microsoft.Web/sites](Create-AzAppService) |
 | An Azure notification API for Slack, Office 365 with Azure Logic Apps | [Microsoft.Logic/workflows](Create-AzNotificationApi) |
+| Auto scale Azure SQL Databases with Azure Logic Apps | [Microsoft.Logic/workflows](Create-AzSqlDatabaseAutoScaling) |
 
 
 # Azure Policy
