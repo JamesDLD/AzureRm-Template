@@ -1,0 +1,259 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "userAssignedIdentityId": {
+            "defaultValue": "demoid",
+            "type": "String",
+            "metadata": {
+                "description": "The user assigned identity id"
+            }
+        },
+        "logicAppName": {
+            "defaultValue": "demologic",
+            "type": "String",
+            "metadata": {
+                "description": "Logic App name"
+            }
+        },
+        "sqlServerId": {
+            "type": "String",
+            "metadata": {
+                "description": "SQL Server resource Id"
+            }
+        },
+        "desiredSkusPerDatabases": {
+            "type": "Object",
+            "metadata": {
+                "description": "Desired Skus per databases"
+            }
+        },
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String"
+        },
+        "tags": {
+            "defaultValue": null,
+            "type": "Object"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('logicAppName')]",
+            "location": "[parameters('location')]",
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "[parameters('userAssignedIdentityId')]": {}
+                }
+            },
+            "tags": "[parameters('tags')]",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        },
+                        "serverId": {
+                            "defaultValue": "[parameters('sqlServerId')]",
+                            "type": "String"
+                        },
+                        "desiredSkusPerDatabases": {
+                            "defaultValue": "[parameters('desiredSkusPerDatabases')]",
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Recurrence": {
+                            "recurrence": {
+                                "frequency": "Week",
+                                "interval": 1,
+                                "schedule": {
+                                    "hours": [
+                                        "16",
+                                        "8"
+                                    ],
+                                    "minutes": [
+                                        0
+                                    ],
+                                    "weekDays": [
+                                        "Monday",
+                                        "Tuesday",
+                                        "Wednesday",
+                                        "Thursday",
+                                        "Friday"
+                                    ]
+                                },
+                                "timeZone": "Romance Standard Time"
+                            },
+                            "evaluatedRecurrence": {
+                                "frequency": "Week",
+                                "interval": 1,
+                                "schedule": {
+                                    "hours": [
+                                        "16",
+                                        "8"
+                                    ],
+                                    "minutes": [
+                                        0
+                                    ],
+                                    "weekDays": [
+                                        "Monday",
+                                        "Tuesday",
+                                        "Wednesday",
+                                        "Thursday",
+                                        "Friday"
+                                    ]
+                                },
+                                "timeZone": "Romance Standard Time"
+                            },
+                            "type": "Recurrence",
+                            "conditions": []
+                        }
+                    },
+                    "actions": {
+                        "For_each_databases": {
+                            "foreach": "@body('Gets_a_list_of_databases')['value']",
+                            "actions": {
+                                "For_each_desired": {
+                                    "foreach": "@parameters('desiredSkusPerDatabases')['target']",
+                                    "actions": {
+                                        "Condition": {
+                                            "actions": {
+                                                "Update_the_Database": {
+                                                    "type": "Http",
+                                                    "inputs": {
+                                                        "authentication": {
+                                                            "audience": "",
+                                                            "identity": "[parameters('userAssignedIdentityId')]",
+                                                            "type": "ManagedServiceIdentity"
+                                                        },
+                                                        "body": {
+                                                            "sku": "@items('For_each_desired')['sku']"
+                                                        },
+                                                        "method": "PATCH",
+                                                        "uri": "@concat('https://management.azure.com/', items('For_each_databases')['id'], '?api-version=2021-11-01')"
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "contentTransfer": {
+                                                            "transferMode": "Chunked"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "else": {
+                                                "actions": {}
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@items('For_each_desired')['name']",
+                                                            "@items('For_each_databases')['name']"
+                                                        ]
+                                                    },
+                                                    {
+                                                        "or": [
+                                                            {
+                                                                "not": {
+                                                                    "equals": [
+                                                                        "@items('For_each_desired')['sku']['name']",
+                                                                        "@items('For_each_databases')['sku']['name']"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "not": {
+                                                                    "equals": [
+                                                                        "@items('For_each_desired')['sku']['tier']",
+                                                                        "@items('For_each_databases')['sku']['tier']"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "not": {
+                                                                    "equals": [
+                                                                        "@items('For_each_desired')['sku']['capacity']",
+                                                                        "@items('For_each_databases')['sku']['capacity']"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Get_the_database": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach"
+                                },
+                                "Get_the_database": {
+                                    "type": "Http",
+                                    "inputs": {
+                                        "authentication": {
+                                            "audience": "",
+                                            "identity": "[parameters('userAssignedIdentityId')]",
+                                            "type": "ManagedServiceIdentity"
+                                        },
+                                        "method": "GET",
+                                        "uri": "@concat('https://management.azure.com/', items('For_each_databases')['id'], '?api-version=2021-11-01')"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "contentTransfer": {
+                                            "transferMode": "Chunked"
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Gets_a_list_of_databases": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "Gets_a_list_of_databases": {
+                            "runAfter": {},
+                            "type": "Http",
+                            "inputs": {
+                                "authentication": {
+                                    "audience": "",
+                                    "identity": "[parameters('userAssignedIdentityId')]",
+                                    "type": "ManagedServiceIdentity"
+                                },
+                                "method": "GET",
+                                "uri": "@concat('https://management.azure.com', parameters('serverId'), '/databases?api-version=2021-11-01')"
+                            },
+                            "runtimeConfiguration": {
+                                "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {}
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+    }
+}
