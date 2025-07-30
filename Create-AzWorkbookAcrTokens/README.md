@@ -24,7 +24,6 @@ $workbookDisplayName = "dmo acr tokens"
 $workbookSourceId = "Azure Monitor"
 $workbookType = "workbook"
 $templateUri = "https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzWorkbookAcrTokens/template.json"
-$workbookSerializedData = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/JamesDLD/AzureRm-Template/master/Create-AzWorkbookAcrTokens/galleryTemplate.json"
 
 ## Connectivity
 # Login first with Connect-AzAccount if not using Cloud Shell
@@ -36,7 +35,5 @@ Write-Host "Deploying : $workbookType-$workbookDisplayName in the resource group
 New-AzResourceGroupDeployment -Name $(("$workbookType-$workbookDisplayName").replace(' ', '')) -ResourceGroupName $RgName `
   -TemplateUri $TemplateUri `
   -workbookDisplayName $workbookDisplayName `
-  -workbookSerializedData ($workbookSerializedData | ConvertTo-Json -Depth 20) `
   -Confirm -ErrorAction Stop
-
 ```

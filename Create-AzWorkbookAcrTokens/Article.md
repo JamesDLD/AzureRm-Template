@@ -55,14 +55,10 @@ resources
 | project id, name, resourceGroup, location, skuName=sku.name
 ```
 
-
 Go to "**Advanced Settings**", select "**When items are selected, export parameters**," and click on "**Add Parameter**," using the following specifications:
-
-
 
 1. Field to export: **id** / Parameter name: **containerRegistryId** / Parameter Type: **Resource picker**
 2. Field to export: **name** / Parameter name: **containerRegistryName** / Parameter Type: **Resource picker**
-
 
 This will permit us to use as a parameter the Container Registry we will select/click on for the next query.
 
@@ -82,7 +78,7 @@ Under Path we can concatenate the output of the previous query **{containerRegis
 
 If you now click on one **Azure Container Registry** from the previous table, click on "**Run Query**", the "**Result Settings**" panel you will see the content result of your API call revealing the Container Registry Tokens passwords.
 
-![alt text](./image/AzureMonitorWorkbook3.png)]
+![alt text](./image/AzureMonitorWorkbook3.png)
 
 The next part consists in drawing a nice table from the json received through API.
 
@@ -96,7 +92,7 @@ It can be achieved through the "**Result Settings**" panel, click on "**JSON Pat
   - Column ID: **password2_creationTime** / Column JSON Path: **$.properties.credentials.passwords[?(@.name=='password2')].creationTime**
   - Column ID: **password2_expiry** / Column JSON Path: **$.properties.credentials.passwords[?(@.name=='password2')].expiry**
 
-![alt text](./image/AzureMonitorWorkbook4.png)]
+![alt text](./image/AzureMonitorWorkbook4.png)
 
 You can also from the "**Advanced Settings**" panel give a "**Chart title**" → "**ACR Token for [{containerRegistryName}]**" for example.
 
@@ -104,7 +100,7 @@ Click on "**Done Editing**" and save you workbook, you will now have a ready wor
 
 The result looks like this
 
-![alt text](./image/AzureMonitorWorkbook5.png)]
+![alt text](./image/AzureMonitorWorkbook5.png)
 
 ## Conclusion
 
