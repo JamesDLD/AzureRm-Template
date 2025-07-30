@@ -1,0 +1,43 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n| where type == \"microsoft.containerregistry/registries\"\r\n| project id, name, resourceGroup, location, skuName=sku.name",
+        "size": 1,
+        "title": "ACR list",
+        "exportedParameters": [
+          {
+            "fieldName": "id",
+            "parameterName": "containerRegistryId",
+            "parameterType": 5
+          },
+          {
+            "fieldName": "name",
+            "parameterName": "containerRegistryName",
+            "parameterType": 5
+          }
+        ],
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": ["value::all"]
+      },
+      "name": "ACR list"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "{\"version\":\"ARMEndpoint/1.0\",\"data\":null,\"headers\":[],\"method\":\"GET\",\"path\":\"{containerRegistryId}/tokens?api-version=2023-01-01-preview\",\"urlParams\":[],\"batchDisabled\":false,\"transformers\":[{\"type\":\"jsonpath\",\"settings\":{\"tablePath\":\"$.value[*]\",\"columns\":[{\"path\":\"$.name\",\"columnid\":\"tokenName\"},{\"path\":\"$.properties.scopeMapId\",\"columnid\":\"scopeMapId\"},{\"path\":\"$.properties.credentials.passwords[?(@.name=='password1')].creationTime\",\"columnid\":\"password1_creationTime\"},{\"path\":\"$.properties.credentials.passwords[?(@.name=='password1')].expiry\",\"columnid\":\"password1_expiry\"},{\"path\":\"$.properties.credentials.passwords[?(@.name=='password2')].creationTime\",\"columnid\":\"password2_creationTime\"},{\"path\":\"$.properties.credentials.passwords[?(@.name=='password2')].expiry\",\"columnid\":\"password2_expiry\"}]}}]}",
+        "size": 1,
+        "title": "ACR Token for [{containerRegistryName}]",
+        "queryType": 12
+      },
+      "name": "ACR Token"
+    }
+  ],
+  "fallbackResourceIds": ["azure monitor"],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
