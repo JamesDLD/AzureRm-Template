@@ -2,19 +2,19 @@
 
 ## Introduction
 
-In this article we will see how to monitor [Azure Container Registry (ACR)](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-authentication?WT.mc_id=AZ-MVP-5003548&tabs=azure-cli) tokens with their expiration dates.
+In this article, we will see how to monitor [Azure Container Registry (ACR)](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-authentication?WT.mc_id=AZ-MVP-5003548&tabs=azure-cli) tokens with their expiration dates.
 
 We will demonstrate how to do this using the Azure REST API: [Registries - Tokens](https://learn.microsoft.com/en-us/rest/api/containerregistry/tokens/list?view=rest-containerregistry-2023-01-01-preview&WT.mc_id=AZ-MVP-5003548&tabs=HTTP) - List and an [Azure Workbook](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-overview?WT.mc_id=AZ-MVP-5003548).
 
 To obtain a list of Azure Container Registry (ACR) tokens and their expiration dates using the Azure Resource Manager API, we need to perform a series of REST API calls to authenticate and retrieve the necessary information. This process involves the following steps:
 
-1. Authenticate and obtain an access token
-2. List ACR tokens
-3. Get token credentials and expiration dates
+1. Authenticate and obtain an access token.
+2. List ACR tokens.
+3. Get token credentials and expiration dates.
 
-## Example bash script
+## Example Bash Script
 
-Here’s an example script that automates the process of obtaining the ACR tokens and their expiration dates:
+Here’s an example script that automates the process of obtaining ACR tokens and their expiration dates:
 
 ```bash
 #!/bin/bash
@@ -41,9 +41,9 @@ curl -s -X GET -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: appl
 
 ## Azure Monitor Workbook
 
-There is as simple way to call Azure APIs within Azure Workbooks with an embedded authentication method, it could be achieved with an Azure Workbook querying [Azure Resource Graph](https://learn.microsoft.com/en-us/azure/governance/resource-graph/samples/starter?WT.mc_id=AZ-MVP-5003548&tabs=azure-cli).
+There is a simple way to call Azure APIs within Azure Workbooks with an embedded authentication method. It can be achieved with an Azure Workbook querying [Azure Resource Graph](https://learn.microsoft.com/en-us/azure/governance/resource-graph/samples/starter?WT.mc_id=AZ-MVP-5003548&tabs=azure-cli).
 
-To create an empty workbook, navigate to [Azure Monitor → Workbook](https://portal.azure.com/#view/Microsoft_Azure_Monitoring/AzureMonitoringBrowseBlade/~/workbooks), select "**+ New**", click on "**+ Add**", select "**Add query**" and use "**Azure Resource Graph**" as Data Source to query all your Azure Container Registries as illustrated in the following screenshot.
+To create an empty workbook, navigate to [Azure Monitor → Workbook](https://portal.azure.com/#view/Microsoft_Azure_Monitoring/AzureMonitoringBrowseBlade/~/workbooks), select "**+ New**", click on "**+ Add**", select "**Add query**," and use "**Azure Resource Graph**" as the Data Source to query all your Azure Container Registries, as illustrated in the following screenshot.
 
 ![alt text](./image/AzureMonitorWorkbook.png)
 
@@ -55,12 +55,16 @@ resources
 | project id, name, resourceGroup, location, skuName=sku.name
 ```
 
-Go to "**Advanced Settings**", select "**When items are selected, export parameters**" and click on "**Add Parameter**" using the following specifications:
 
-1. Filed to export: **id** / Parameter name: **containerRegistryId** / Parameter Type: **Resource picker**
-2. Filed to export: **name** / Parameter name: **containerRegistryName** / Parameter Type: **Resource picker**
+Go to "**Advanced Settings**", select "**When items are selected, export parameters**," and click on "**Add Parameter**," using the following specifications:
 
-This will permit us to use as parameter the Container Registry will will select / click on for the next query.
+
+
+1. Field to export: **id** / Parameter name: **containerRegistryId** / Parameter Type: **Resource picker**
+2. Field to export: **name** / Parameter name: **containerRegistryName** / Parameter Type: **Resource picker**
+
+
+This will permit us to use as a parameter the Container Registry we will select/click on for the next query.
 
 You can also from this panel give a "**Chart title**" to our chart → "**ACR list**" for example.
 
@@ -87,7 +91,6 @@ It can be achieved through the "**Result Settings**" panel, click on "**JSON Pat
 - JSON Path Table: **$.value[*]**
 - Columns:
   - Column ID: **tokenName** / Column JSON Path: **$.name**
-  - Column ID: **scopeMapId** / Column JSON Path: **$.properties.scopeMapId**
   - Column ID: **password1_creationTime** / Column JSON Path: **$.properties.credentials.passwords[?(@.name=='password1')].creationTime**
   - Column ID: **password1_expiry** / Column JSON Path: **$.properties.credentials.passwords[?(@.name=='password1')].expiry**
   - Column ID: **password2_creationTime** / Column JSON Path: **$.properties.credentials.passwords[?(@.name=='password2')].creationTime**
