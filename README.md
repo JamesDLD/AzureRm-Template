@@ -21,7 +21,7 @@ Sharing Azure ARM Templates, Policies and Tutoriels with the community.
 | ------------- | ------------- |
 | Create an [Azure Monitor Workbook](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/workbooks-overview?WT.mc_id=AZ-MVP-5003548) | [workbooks](Create-AzWorkbookNetwork) |
 | Create an [Azure Monitor Workbook for OMI Vulnerabilities Rapid Check](https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/azure-monitor-omi-vulnerabilities-rapid-check-workbook/ba-p/2779755?WT.mc_id=AZ-MVP-5003548) | [omi-workbook](Create-AzWorkbookOmiVulnerabilities) |
-| [Azure Workbook for ACR tokens and their expiration dates](url to add) | [acr-workbook](Create-AzWorkbookAcrTokens) |
+| [Azure Workbook for ACR tokens and their expiration dates](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/azure-workbook-for-acr-tokens-and-their-expiration-dates/4438249) | [acr-workbook](Create-AzWorkbookAcrTokens) |
 
 
 

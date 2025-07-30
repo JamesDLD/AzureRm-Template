@@ -2,7 +2,7 @@
 
 ## Content
 
-This template a workbook to list all ACR tokens and their expiration.
+This template a workbook to list all [ACR tokens and their expiration](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/azure-workbook-for-acr-tokens-and-their-expiration-dates/4438249).
 
 ## Deployment through the Portal
 
