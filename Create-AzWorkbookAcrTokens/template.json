@@ -1,0 +1,57 @@
+{
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workbookDisplayName": {
+      "type": "string",
+      "defaultValue": "ACR tokens and their expiration dates",
+      "metadata": {
+        "description": "The friendly name for the workbook that is used in the Gallery or Saved List.  This name must be unique within a resource group."
+      }
+    },
+    "workbookType": {
+      "type": "string",
+      "defaultValue": "workbook",
+      "metadata": {
+        "description": "The gallery that the workbook will been shown under. Supported values include workbook, tsg, etc. Usually, this is 'workbook'"
+      }
+    },
+    "workbookSourceId": {
+      "type": "string",
+      "defaultValue": "azure monitor",
+      "metadata": {
+        "description": "The id of resource instance to which the workbook will be associated"
+      }
+    },
+    "workbookId": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "The unique guid for this workbook instance"
+      }
+    }
+  },
+  "resources": [
+    {
+      "name": "[parameters('workbookId')]",
+      "type": "microsoft.insights/workbooks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2022-04-01",
+      "dependsOn": [],
+      "kind": "shared",
+      "properties": {
+        "displayName": "[parameters('workbookDisplayName')]",
+        "serializedData": "{\"version\":\"Notebook/1.0\",\"items\":[{\"type\":3,\"content\":{\"version\":\"KqlItem/1.0\",\"query\":\"resources\\r\\n| where type == \\\"microsoft.containerregistry/registries\\\"\\r\\n| project id, name, resourceGroup, location, skuName=sku.name\",\"size\":1,\"title\":\"ACR list\",\"exportedParameters\":[{\"fieldName\":\"id\",\"parameterName\":\"containerRegistryId\",\"parameterType\":5},{\"fieldName\":\"name\",\"parameterName\":\"containerRegistryName\",\"parameterType\":5}],\"queryType\":1,\"resourceType\":\"microsoft.resourcegraph/resources\",\"crossComponentResources\":[\"value::all\"]},\"name\":\"ACR list\"},{\"type\":3,\"content\":{\"version\":\"KqlItem/1.0\",\"query\":\"{\\\"version\\\":\\\"ARMEndpoint/1.0\\\",\\\"data\\\":null,\\\"headers\\\":[],\\\"method\\\":\\\"GET\\\",\\\"path\\\":\\\"{containerRegistryId}/tokens?api-version=2023-01-01-preview\\\",\\\"urlParams\\\":[],\\\"batchDisabled\\\":false,\\\"transformers\\\":[{\\\"type\\\":\\\"jsonpath\\\",\\\"settings\\\":{\\\"tablePath\\\":\\\"$.value[*]\\\",\\\"columns\\\":[{\\\"path\\\":\\\"$.name\\\",\\\"columnid\\\":\\\"tokenName\\\"},{\\\"path\\\":\\\"$.properties.scopeMapId\\\",\\\"columnid\\\":\\\"scopeMapId\\\"},{\\\"path\\\":\\\"$.properties.credentials.passwords[?(@.name=='password1')].creationTime\\\",\\\"columnid\\\":\\\"password1_creationTime\\\"},{\\\"path\\\":\\\"$.properties.credentials.passwords[?(@.name=='password1')].expiry\\\",\\\"columnid\\\":\\\"password1_expiry\\\"},{\\\"path\\\":\\\"$.properties.credentials.passwords[?(@.name=='password2')].creationTime\\\",\\\"columnid\\\":\\\"password2_creationTime\\\"},{\\\"path\\\":\\\"$.properties.credentials.passwords[?(@.name=='password2')].expiry\\\",\\\"columnid\\\":\\\"password2_expiry\\\"}]}}]}\",\"size\":1,\"title\":\"ACR Token for [{containerRegistryName}]\",\"queryType\":12},\"name\":\"ACR Token\"}],\"isLocked\":false,\"fallbackResourceIds\":[\"azure monitor\"]}",
+        "version": "1.0",
+        "sourceId": "[parameters('workbookSourceId')]",
+        "category": "[parameters('workbookType')]"
+      }
+    }
+  ],
+  "outputs": {
+    "workbookId": {
+      "type": "string",
+      "value": "[resourceId( 'microsoft.insights/workbooks', parameters('workbookId'))]"
+    }
+  },
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#"
+}
